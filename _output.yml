@@ -7,11 +7,7 @@ bookdown::gitbook:
   css: style.css
   config:
     toc:
-      before: |
-        <li><a href="./">VECTORES AUTOREGRESIVOS/a></li>
-      after: |
-        <li><a href="https://ortiz-cevallos.github.io/VAR/index" target="blank">Published with bookdown</a></li>
-    download: ["pdf", "epub"]
+      download: ["pdf", "epub"]
 bookdown::pdf_book:
   includes:
   in_header: preamble.tex
