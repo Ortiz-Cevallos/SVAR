@@ -1,0 +1,21 @@
+bookdown::gitbook:
+  includes:
+    in_header: hide_code.html # inspired by: https://stackoverflow.com/questions/45360998/code-folding-in-bookdown
+  split_by: "none"
+  split_bib: TRUE
+  toc_depth: 4
+  css: style.css
+  config:
+    toc:
+      before: |
+        <li><a href="./">VECTORES AUTOREGRESIVOS/a></li>
+      after: |
+        <li><a href="https://ortiz-cevallos.github.io/VAR/index" target="blank">Published with bookdown</a></li>
+    download: ["pdf", "epub"]
+bookdown::pdf_book:
+  includes:
+  in_header: preamble.tex
+  latex_engine: xelatex
+  citation_package: natbib
+  keep_tex: yes
+bookdown::epub_book: default

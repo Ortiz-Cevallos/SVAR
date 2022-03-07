@@ -1,0 +1,7 @@
+book_filename: "index"
+chapter_name: "Capítulo "
+repo: https://ortiz-cevallos.github.io/VAR/bookdown-start
+output_dir: docs
+rmd_files: ["index.Rmd", "01-conceptos.Rmd", "02-referencias.Rmd"]
+clean: [bookdown.bbl]
+new_session: yes

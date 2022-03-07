@@ -1,0 +1,53 @@
+---
+title: "VECTORES AUTOREGRESIVOS (VAR)"
+author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+code_download: true
+code_folding: hide
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# INTRODUCCIÓN
+
+En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R *SVARS* elaborado por @SVAR21. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados. 
+
+```{r message=FALSE, warning=FALSE}
+#install.packages("svars")
+library("svars")
+library("ggplot2")
+```
+
+Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto, la inflación de trimestre a trimestre del deflactor del PIB y una tasa de interés nominal del fondo federal.
+```{r message=FALSE, warning=FALSE}
+data("USA")
+usa<-as.zoo(USA)
+autoplot(usa, facets = T) + theme_bw() + ylab('')
+```
+
+A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
+
+@Herwartz2016 argumentan que el punto de quiebra se dio en el tercer trimestre de 1979 donde aconteció un cambio en la política de la Reserva Federal que redujo la volatilidad de las variables macroeconómicas (ver @Stock2003)
+
+Lo anterior es posible visualizarlo.
+Un primer paso es visualizar cada una de las series.
+```{r message=FALSE, warning=FALSE}
+autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
+```
+
+Seguidamente se estimara la forma reducida de un VAR, aplicaremos una especificación que incluya intercepto y hasta seis rezagos (p=6)
+
+Un primer paso es visualizar cada una de las series.
+
+```{r message=FALSE, warning=FALSE}
+plain.var <- vars::VAR(USA, p = 6, type = 'const')
+```
