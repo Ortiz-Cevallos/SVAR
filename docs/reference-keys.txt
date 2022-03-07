@@ -1,3 +1,8 @@
 introducción
-ejercicio
+paquete-en-r
+función-impulso-respuesta
+función-impulso-respuesta-en-una-representación-var
+ortogonalización
+supuestos-de-ortogonalización
+ortogonalización-de-sims
 bla-bla
