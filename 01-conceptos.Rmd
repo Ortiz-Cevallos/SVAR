@@ -20,6 +20,155 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 # INTRODUCCIÓN
 
+## El modelo de vectores autoregresivos (VAR)
+
+Un VAR consiste en un conjunto de k variables endógenas $Y_{t}=\{y_{1t},\cdots, y_{kt}\}$.
+
+En el caso de un proceso ARMA(2,1):
+$Y_t = \Phi_1Y_{t-1} + \Phi_2Y_{t-2} + u_t + \theta_1u_{t-1}$
+
+Podemos reescribirlo como:
+\begin{equation}
+\left( \begin{array}{c}
+Y_{t} \\
+Y_{t-1} \\
+u_{t} 
+\end{array}
+\right)=\left( \begin{array}{ccc}
+\Phi_1 & \Phi_2 & \theta_1\\
+1 & 0 & 0\\
+0 & 0 & 0
+\end{array}
+\right) \left( \begin{array}{c}
+Y_{t-1} \\
+Y_{t-2} \\
+u_{t-1} 
+\end{array}
+\right)+\left( \begin{array}{c}
+1\\
+0 \\
+1
+\end{array}
+\right) \left( \begin{array}{c}
+u_{t} \\
+0 \\
+0
+\end{array}
+\right) 
+\nonumber
+\end{equation} 
+
+
+Lo anterior no es otra cosa que un proceso AR(1), matricialmente:
+
+$x_t = Ax_{t−1} + Cw_t$
+
+Este proceso tiene los siguientes supuestos:
+
+1. $E(w_{t})=0$
+
+2. $E(w_{t}w_{t}^{\tau})=\Sigma_{w}$ una matriz de covarianza invariante en el tiempo la cual  es definida positiva.
+
+
+## Función Impulso Respuesta
+
+La función impulso respuesta es la senda que sigue una serie cuando enfrenta un shock unitario.
+
+Es interesante por:
+
+1. Caracteriza el comportamiento del modelo.
+2. Permite la discusión de quién causa a quién.
+
+
+Para una proceso AR(1) $y_{t}=\phi y_{t-1}+\epsilon_{t}$ el cual lo expresamos en MA($\infty$) como $y_{t}=\sum_{j=0}^{\infty}\phi^{j}  \epsilon_{t-j}$, su impulso respuesta es:
+
+
+$\begin{array}{cccccccc}
+\epsilon_{t} &\colon &0&0&1&0&0&0 \\
+x_{t}        &\colon &0&0&\phi&\phi^{2}&\phi^{3}&\cdots
+\end{array}$
+
+¿Por qué es importante definir un proceso como un MA$(\infty)$?
+
+1. La representación MA infinito de todo proceso es *la función impulso respuesta*
+2. La función impulso respuesta es equivalente a $E_{t}(x_{t+h})-E_{t-1}(x_{t+h})$ que no es otra cosa que el error de pronóstico hacia h pasos adelante.
+
+Noten que los pronósticos para horizontes $h\geq1$ de un proceso VAR(p) puede ser generado de manera recursiva.
+$x_{t+h/t} = A_{1}x_{t+h-1/t} + \cdots+A_{p}x_{t+h-p/t}$
+
+Entonces la matriz de covarinazas del error de pronósito está dado por:
+
+\begin{equation}
+\left( \begin{array}{c}
+Y_{t+1}-Y_{t+1/t} \\
+\vdots \\
+Y_{t+h}-Y_{t+h/t}
+\end{array}
+\right)
+\left( \begin{array}{c}
+Y_{t+1}-Y_{t+1/t} \\
+\vdots \\
+Y_{t+h}-Y_{t+h/t}
+\end{array}
+\right)^{\tau}
+=\left( \begin{array}{cccc}
+I      & 0  & \cdots & 0\\
+\Phi_1 & I  &        & 0\\
+\vdots &    & \ddots & 0\\
+\Phi_{h-1} & \Phi_{h-1}   & \cdots & I\\
+\end{array}
+\right) \left(\Sigma_{w}\otimes I_{h}\right)\left( \begin{array}{cccc}
+I      & 0  & \cdots & 0\\
+\Phi_1 & I  &        & 0\\
+\vdots &    & \ddots & 0\\
+\Phi_{h-1} & \Phi_{h-1}   & \cdots & I\\
+\end{array}
+\right)^{\tau}
+\nonumber
+\end{equation} 
+
+Sí suponemos que h=10, k=4, el lado izquierdo de la ecuación es una matriz 40X40. La primera matriz del lado derecho es de dimensión 40X40 dado que w es de dimensión 4x4 pues hay 4 regresores, el resultado del segundo componente del lado derecho es una matriz 40x40, finalmente el último término también es una matriz 40x40.
+
+Por otro lado, al haber 4 regresores, $x_{t}$ es un vector de dimensión 12, A es una matriz de dimensión 12x12 mientras C y w son dos vectores de dimensión 12.
+
+## Vectores autoregresivos estructurales
+
+Expresándolo como un VAR(1) de forma matricial tenermos:
+
+\begin{equation}
+x_t = Ax_{t−1} + Cw_t
+\label{e1}
+\end{equation}
+Cuando la ecuación \@ref{e1} se expresa como en \@ref{e2} se conoce como su *forma reducida*
+\begin{equation}
+Ax_t = A^{*}x_{t−1} + Bw_t
+\label{e2}
+\end{equation}
+
+
+Si asumimos que los *errores estructurales* que integran el vector $w_{t}$ es decir $\epsilon_{t}$ son ruido blanco, y que los coeficientes en la matriz $A^{*}$ son *estructurales* los cuales difieran de sus contrapartes en su forma reducida. 
+
+Para ver lo anterior, multiplicamos la ecuación \@ref{e2} por $A^{-1}$:
+
+\begin{align}
+x_t &= A^{-1}A^{*}x_{t−1} + A^{-1}Bw_t\\
+x_t &= Ax_{t−1} + \eta_t
+\end{align}
+
+Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B. 
+
+Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida y solo se pueden agregar restricciones para A y B. Cabe señalar que los residuos en su  forma reducida se puede recuperar de un modelo SVAR por $\eta_t=A^{-1}Bw_t$ y su matriz de varianza-covarianza es $\Sigma_\eta=A^{-1}BB^{\tau}(A^{-1})^{\tau}$.
+
+Es posible distinguir tres tipos de SVAR según se impongan las restricciones:
+
+1. *Modelo A* La matriz B corresponde a $I_{k}$ lo que implica que el número mínimo de restricciones para su identificación es $k\frac{(k-1)}{2}$
+
+2. *Modelo B* La matriz A corresponde a $I_{k}$ lo que implica que el número mínimo de restricciones para su identificación es $k\frac{(k-1)}{2}$
+
+3. *Modelo AB* Las restricciones pueden ser impuestas en ambas matrices siendo el número mínimo de restricciones para su identificación es $k^{2}+k\frac{(k-1)}{2}$
+
+
+
 ## Paquete en R
 
 En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R *SVARS* elaborado por @SVAR21. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados. 
@@ -65,8 +214,7 @@ Los resultados muestran la matriz de covarianza estimada $\hat{B}$, la matriz de
 
 Es de notar que el orden de las columnas en  $\hat{B}$ es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.
 
-A pesar de lo anterior, @Herwartz2016 hacen un ordenamiento en las de acuerdo con el patrón de signo único que indica la dirección
-de los choques. El siguiente código ordena las columnas de la misma manera. 
+A pesar de lo anterior, @Herwartz2016 hacen un ordenamiento de acuerdo con el patrón de signo único que indica la dirección de los choques. El siguiente código ordena las columnas de esa misma manera. 
 ```{r message=FALSE, warning=FALSE}
 usa.cv$B <- usa.cv$B[, c(3, 2, 1)]
 usa.cv$B[,3] <- usa.cv$B[, 3] * (-1)
@@ -74,8 +222,59 @@ usa.cv$B_SE <- usa.cv$B_SE[, c(3, 2, 1)]
 usa.cv$Lambda <- diag(diag(usa.cv$Lambda)[c(3, 2, 1)])
 usa.cv$Lambda_SE <- diag(diag(usa.cv$Lambda_SE)[c(3, 2, 1)])
 round(usa.cv$B, 3)
+```
+
+@Herwartz2016 interpretan el efecto de la primera columna de la matriz $\hat{B}$ como un shock de demanda. La segunda y tercera columna representan, respectivamente, un shock de oferta y política monetaria.
+
+```{r message=FALSE, warning=FALSE}
 round(usa.cv$Lambda, 3)
 ```
+En cambio la matriz $\hat{\lambda}$ representa la varianza de los shocks estructurales en un segundo regimén, esto es posterior al quiebre estructural. Los autores interpretan a partir de la diagonal de $\hat{\lambda}$ que los shocks de oferta y política monetaria tiene baja varianza en comparación a los shocks de demanda.
+
+Los autores comparan estos resultados con los obtenidos por @Sims80 utilizando la descomposición de la matriz de covarianza ($\hat{B}$) como una matriz triangular inferior. La función *id.cv()* permite
+probar tales restricciones configurando para ello una matriz triangular inferior como se describe en el código siguiente.
+```{r message=FALSE, warning=FALSE}
+restMat <- matrix(rep(NA, 9), ncol = 3)
+restMat[1, c(2, 3)] <- 0
+restMat[2, 3] <- 0
+restMat
+```
+```{r message=FALSE, warning=FALSE}
+restricted.model <- id.cv(plain.var, SB = c(1979, 3),restriction_matrix = restMat)
+summary(restricted.model)
+```
+
+Si partimos que los shocks structurales fueron identificados con la metodología de cambio en la matriz de covarianza, cualquier restricción impuesta sobre $B$ hace que el modelo esté sobre identificado y ello es posible probarse.
+
+En resumen el "likelihood ratio test" indica que bajo la $H_{0}$
+que $B$ la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al $5\%$ de nivel de significancia. @Herwartz2016 argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.
+
+El siguiente paso es calcular la función impulso respuesta (IFR) con un intervalo de confianza obtenido a partir del método "boostrap". A partir de la IFR es posible investigar los efectos futuros de los shocks estructurales etiquetados como "económicos" sobre las variables
+incluidas en el modelo. De hecho de acuerdo a @Herwartz18 aplicar la metodología "boostrap permite evaluar la significancia en los signos que se hacen patentes en la matriz $\hat{B}$.
+
+Para aplicar lo anterior, definimos una lista con los signos que representan nuestras restricciones tanto para los shocks de demanda, oferta y política monetaria.
+
+```{r message=FALSE, warning=FALSE}
+signrest <- list(demand = c(1, 1, 1), supply = c(-1, 1, 1), monetary_policy = c(-1, -1, 1))
+```
+
+Notal que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.
+
+```{r message=FALSE, warning=FALSE}
+cores <- parallel::detectCores() - 1
+set.seed(231)
+usa.cv.boot <- wild.boot(usa.cv, design = "fixed",distr = "rademacher", nboot = 1000, n.ahead = 15,nc = cores, signrest = signrest)
+summary(usa.cv.boot)
+```
+
+Enseguida, graficamos para cada variable y shocks su IFR.
+
+```{r message=FALSE, warning=FALSE}
+plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
+```
+
+En resumen solamente el 12.7% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
+El signo del patron de shocks monetario esperado aparece en un 28.4%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.
 
 
 ## Función Impulso Respuesta
@@ -96,17 +295,8 @@ $\begin{array}{cccccccc}
 x_{t}        &\colon &0&0&\phi&\phi^{2}&\phi^{3}&\cdots
 \end{array}$
 
-Similarmente para un proceso MA($\infty$): $y_{t}=\sum_{j=0}^{\infty}\theta \epsilon_{t-j}$, su impulso respuesta es:
 
-$\begin{array}{cccccccc}
-	\epsilon_{t} &\colon &0&0&1&0&0&0 \\
-	x_{t}        &\colon &0&0&\theta&\theta_{2}&\theta_{3}&\cdots
-\end{array}$
 
-¿Por qué es importante definir un proceso como un MA$(\infty)$?
-
-1. La representación MA infinito de todo proceso es *la función impulso respuesta*
-2. La función impulso respuesta es equivalente a $E_{t}(x_{t+h})-E_{t-1}(x_{t+h})$
 
  
 Representación de un proceso ARMA como un vector AR(1)

@@ -24,7 +24,7 @@
 <meta name="author" content="Luis Ortiz-Cevallos" />
 
 
-<meta name="date" content="2022-03-07" />
+<meta name="date" content="2022-03-09" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -869,13 +869,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul class="summary">
 <li class="chapter" data-level="1" data-path=""><a href="#introducción"><i class="fa fa-check"></i><b>1</b> INTRODUCCIÓN</a>
 <ul>
-<li class="chapter" data-level="1.1" data-path=""><a href="#paquete-en-r"><i class="fa fa-check"></i><b>1.1</b> Paquete en R</a></li>
+<li class="chapter" data-level="1.1" data-path=""><a href="#el-modelo-de-vectores-autoregresivos-var"><i class="fa fa-check"></i><b>1.1</b> El modelo de vectores autoregresivos (VAR)</a></li>
 <li class="chapter" data-level="1.2" data-path=""><a href="#función-impulso-respuesta"><i class="fa fa-check"></i><b>1.2</b> Función Impulso Respuesta</a></li>
-<li class="chapter" data-level="1.3" data-path=""><a href="#función-impulso-respuesta-en-una-representación-var"><i class="fa fa-check"></i><b>1.3</b> Función Impulso Respuesta en una representación VAR</a></li>
-<li class="chapter" data-level="1.4" data-path=""><a href="#ortogonalización"><i class="fa fa-check"></i><b>1.4</b> Ortogonalización</a></li>
-<li class="chapter" data-level="1.5" data-path=""><a href="#supuestos-de-ortogonalización"><i class="fa fa-check"></i><b>1.5</b> Supuestos de Ortogonalización</a></li>
-<li class="chapter" data-level="1.6" data-path=""><a href="#ortogonalización-de-sims"><i class="fa fa-check"></i><b>1.6</b> Ortogonalización de Sims</a></li>
-<li class="chapter" data-level="1.7" data-path=""><a href="#bla-bla"><i class="fa fa-check"></i><b>1.7</b> BLA Bla</a></li>
+<li class="chapter" data-level="1.3" data-path=""><a href="#vectores-autoregresivos-estructurales"><i class="fa fa-check"></i><b>1.3</b> Vectores autoregresivos estructurales</a></li>
+<li class="chapter" data-level="1.4" data-path=""><a href="#paquete-en-r"><i class="fa fa-check"></i><b>1.4</b> Paquete en R</a></li>
+<li class="chapter" data-level="1.5" data-path=""><a href="#función-impulso-respuesta-1"><i class="fa fa-check"></i><b>1.5</b> Función Impulso Respuesta</a></li>
+<li class="chapter" data-level="1.6" data-path=""><a href="#función-impulso-respuesta-en-una-representación-var"><i class="fa fa-check"></i><b>1.6</b> Función Impulso Respuesta en una representación VAR</a></li>
+<li class="chapter" data-level="1.7" data-path=""><a href="#ortogonalización"><i class="fa fa-check"></i><b>1.7</b> Ortogonalización</a></li>
+<li class="chapter" data-level="1.8" data-path=""><a href="#supuestos-de-ortogonalización"><i class="fa fa-check"></i><b>1.8</b> Supuestos de Ortogonalización</a></li>
+<li class="chapter" data-level="1.9" data-path=""><a href="#ortogonalización-de-sims"><i class="fa fa-check"></i><b>1.9</b> Ortogonalización de Sims</a></li>
+<li class="chapter" data-level="1.10" data-path=""><a href="#bla-bla"><i class="fa fa-check"></i><b>1.10</b> BLA Bla</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path=""><a href="#referencias"><i class="fa fa-check"></i>Referencias</a></li>
 </ul>
@@ -898,12 +901,131 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="header">
 <h1 class="title">VECTORES AUTOREGRESIVOS (VAR)</h1>
 <p class="author"><em><a href="https://ortiz-cevallos.github.io/MYSELF/">Luis Ortiz-Cevallos</a></em></p>
-<p class="date"><em>2022-03-07</em></p>
+<p class="date"><em>2022-03-09</em></p>
 </div>
 <div id="introducción" class="section level1" number="1">
 <h1><span class="header-section-number">Capítulo 1</span> INTRODUCCIÓN</h1>
-<div id="paquete-en-r" class="section level2" number="1.1">
-<h2><span class="header-section-number">1.1</span> Paquete en R</h2>
+<div id="el-modelo-de-vectores-autoregresivos-var" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> El modelo de vectores autoregresivos (VAR)</h2>
+<p>Un VAR consiste en un conjunto de k variables endógenas <span class="math inline">\(Y_{t}=\{y_{1t},\cdots, y_{kt}\}\)</span>.</p>
+<p>En el caso de un proceso ARMA(2,1):
+<span class="math inline">\(Y_t = \Phi_1Y_{t-1} + \Phi_2Y_{t-2} + u_t + \theta_1u_{t-1}\)</span></p>
+<p>Podemos reescribirlo como:
+<span class="math display">\[\begin{equation}
+\left( \begin{array}{c}
+Y_{t} \\
+Y_{t-1} \\
+u_{t} 
+\end{array}
+\right)=\left( \begin{array}{ccc}
+\Phi_1 &amp; \Phi_2 &amp; \theta_1\\
+1 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0
+\end{array}
+\right) \left( \begin{array}{c}
+Y_{t-1} \\
+Y_{t-2} \\
+u_{t-1} 
+\end{array}
+\right)+\left( \begin{array}{c}
+1\\
+0 \\
+1
+\end{array}
+\right) \left( \begin{array}{c}
+u_{t} \\
+0 \\
+0
+\end{array}
+\right) 
+\nonumber
+\end{equation}\]</span></p>
+<p>Lo anterior no es otra cosa que un proceso AR(1), matricialmente:</p>
+<p><span class="math inline">\(x_t = Ax_{t−1} + Cw_t\)</span></p>
+<p>Este proceso tiene los siguientes supuestos:</p>
+<ol style="list-style-type: decimal">
+<li><p><span class="math inline">\(E(w_{t})=0\)</span></p></li>
+<li><p><span class="math inline">\(E(w_{t}w_{t}^{\tau})=\Sigma_{w}\)</span> una matriz de covarianza invariante en el tiempo la cual es definida positiva.</p></li>
+</ol>
+</div>
+<div id="función-impulso-respuesta" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Función Impulso Respuesta</h2>
+<p>La función impulso respuesta es la senda que sigue una serie cuando enfrenta un shock unitario.</p>
+<p>Es interesante por:</p>
+<ol style="list-style-type: decimal">
+<li>Caracteriza el comportamiento del modelo.</li>
+<li>Permite la discusión de quién causa a quién.</li>
+</ol>
+<p>Para una proceso AR(1) <span class="math inline">\(y_{t}=\phi y_{t-1}+\epsilon_{t}\)</span> el cual lo expresamos en MA(<span class="math inline">\(\infty\)</span>) como <span class="math inline">\(y_{t}=\sum_{j=0}^{\infty}\phi^{j} \epsilon_{t-j}\)</span>, su impulso respuesta es:</p>
+<p><span class="math inline">\(\begin{array}{cccccccc} \epsilon_{t} &amp;\colon &amp;0&amp;0&amp;1&amp;0&amp;0&amp;0 \\ x_{t} &amp;\colon &amp;0&amp;0&amp;\phi&amp;\phi^{2}&amp;\phi^{3}&amp;\cdots \end{array}\)</span></p>
+<p>¿Por qué es importante definir un proceso como un MA<span class="math inline">\((\infty)\)</span>?</p>
+<ol style="list-style-type: decimal">
+<li>La representación MA infinito de todo proceso es <em>la función impulso respuesta</em></li>
+<li>La función impulso respuesta es equivalente a <span class="math inline">\(E_{t}(x_{t+h})-E_{t-1}(x_{t+h})\)</span> que no es otra cosa que el error de pronóstico hacia h pasos adelante.</li>
+</ol>
+<p>Noten que los pronósticos para horizontes <span class="math inline">\(h\geq1\)</span> de un proceso VAR(p) puede ser generado de manera recursiva.
+<span class="math inline">\(x_{t+h/t} = A_{1}x_{t+h-1/t} + \cdots+A_{p}x_{t+h-p/t}\)</span></p>
+<p>Entonces la matriz de covarinazas del error de pronósito está dado por:</p>
+<p><span class="math display">\[\begin{equation}
+\left( \begin{array}{c}
+Y_{t+1}-Y_{t+1/t} \\
+\vdots \\
+Y_{t+h}-Y_{t+h/t}
+\end{array}
+\right)
+\left( \begin{array}{c}
+Y_{t+1}-Y_{t+1/t} \\
+\vdots \\
+Y_{t+h}-Y_{t+h/t}
+\end{array}
+\right)^{\tau}
+=\left( \begin{array}{cccc}
+I      &amp; 0  &amp; \cdots &amp; 0\\
+\Phi_1 &amp; I  &amp;        &amp; 0\\
+\vdots &amp;    &amp; \ddots &amp; 0\\
+\Phi_{h-1} &amp; \Phi_{h-1}   &amp; \cdots &amp; I\\
+\end{array}
+\right) \left(\Sigma_{w}\otimes I_{h}\right)\left( \begin{array}{cccc}
+I      &amp; 0  &amp; \cdots &amp; 0\\
+\Phi_1 &amp; I  &amp;        &amp; 0\\
+\vdots &amp;    &amp; \ddots &amp; 0\\
+\Phi_{h-1} &amp; \Phi_{h-1}   &amp; \cdots &amp; I\\
+\end{array}
+\right)^{\tau}
+\nonumber
+\end{equation}\]</span></p>
+<p>Sí suponemos que h=10, k=4, el lado izquierdo de la ecuación es una matriz 40X40. La primera matriz del lado derecho es de dimensión 40X40 dado que w es de dimensión 4x4 pues hay 4 regresores, el resultado del segundo componente del lado derecho es una matriz 40x40, finalmente el último término también es una matriz 40x40.</p>
+<p>Por otro lado, al haber 4 regresores, <span class="math inline">\(x_{t}\)</span> es un vector de dimensión 12, A es una matriz de dimensión 12x12 mientras C y w son dos vectores de dimensión 12.</p>
+</div>
+<div id="vectores-autoregresivos-estructurales" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Vectores autoregresivos estructurales</h2>
+<p>Expresándolo como un VAR(1) de forma matricial tenermos:</p>
+<p><span class="math display">\[\begin{equation}
+x_t = Ax_{t−1} + Cw_t
+\label{e1}
+\end{equation}\]</span>
+Cuando la ecuación @ref{e1} se expresa como en @ref{e2} se conoce como su <em>forma reducida</em>
+<span class="math display">\[\begin{equation}
+Ax_t = A^{*}x_{t−1} + Bw_t
+\label{e2}
+\end{equation}\]</span></p>
+<p>Si asumimos que los <em>errores estructurales</em> que integran el vector <span class="math inline">\(w_{t}\)</span> es decir <span class="math inline">\(\epsilon_{t}\)</span> son ruido blanco, y que los coeficientes en la matriz <span class="math inline">\(A^{*}\)</span> son <em>estructurales</em> los cuales difieran de sus contrapartes en su forma reducida.</p>
+<p>Para ver lo anterior, multiplicamos la ecuación @ref{e2} por <span class="math inline">\(A^{-1}\)</span>:</p>
+<p><span class="math display">\[\begin{align}
+x_t &amp;= A^{-1}A^{*}x_{t−1} + A^{-1}Bw_t\\
+x_t &amp;= Ax_{t−1} + \eta_t
+\end{align}\]</span></p>
+<p>Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B.</p>
+<p>Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida y solo se pueden agregar restricciones para A y B. Cabe señalar que los residuos en su forma reducida se puede recuperar de un modelo SVAR por <span class="math inline">\(\eta_t=A^{-1}Bw_t\)</span> y su matriz de varianza-covarianza es <span class="math inline">\(\Sigma_\eta=A^{-1}BB^{\tau}(A^{-1})^{\tau}\)</span>.</p>
+<p>Es posible distinguir tres tipos de SVAR según se impongan las restricciones:</p>
+<ol style="list-style-type: decimal">
+<li><p><em>Modelo A</em> La matriz B corresponde a <span class="math inline">\(I_{k}\)</span> lo que implica que el número mínimo de restricciones para su identificación es <span class="math inline">\(k\frac{(k-1)}{2}\)</span></p></li>
+<li><p><em>Modelo B</em> La matriz A corresponde a <span class="math inline">\(I_{k}\)</span> lo que implica que el número mínimo de restricciones para su identificación es <span class="math inline">\(k\frac{(k-1)}{2}\)</span></p></li>
+<li><p><em>Modelo AB</em> Las restricciones pueden ser impuestas en ambas matrices siendo el número mínimo de restricciones para su identificación es <span class="math inline">\(k^{2}+k\frac{(k-1)}{2}\)</span></p></li>
+</ol>
+</div>
+<div id="paquete-en-r" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> Paquete en R</h2>
 <p>En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R <em>SVARS</em> elaborado por <span class="citation"><a href="#ref-SVAR21" role="doc-biblioref">Lange et al.</a> (<a href="#ref-SVAR21" role="doc-biblioref">2021</a>)</span>. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages(&quot;svars&quot;)</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;svars&quot;</span>)</span>
@@ -972,8 +1094,7 @@ x_{t}&amp;=B(L)\epsilon_{t},\;\;B(0)=I,\;\;E(\epsilon_{t}\epsilon_{t}^{&#39;})=\
 \end{align}\]</span><br />
 Los resultados muestran la matriz de covarianza estimada <span class="math inline">\(\hat{B}\)</span>, la matriz de cambio en la convarianza estiamda <span class="math inline">\(\hat{\lambda}\)</span>.</p>
 <p>Es de notar que el orden de las columnas en <span class="math inline">\(\hat{B}\)</span> es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.</p>
-<p>A pesar de lo anterior, <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> hacen un ordenamiento en las de acuerdo con el patrón de signo único que indica la dirección
-de los choques. El siguiente código ordena las columnas de la misma manera.</p>
+<p>A pesar de lo anterior, <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> hacen un ordenamiento de acuerdo con el patrón de signo único que indica la dirección de los choques. El siguiente código ordena las columnas de esa misma manera.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B[,<span class="dv">3</span>] <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="dv">3</span>] <span class="sc">*</span> (<span class="sc">-</span><span class="dv">1</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B_SE <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B_SE[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
@@ -984,14 +1105,135 @@ de los choques. El siguiente código ordena las columnas de la misma manera.</p>
 ## x  0.224 -0.593 -0.612
 ## pi 0.113  1.299 -0.756
 ## i  0.708  0.157  0.029</code></pre>
+<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> interpretan el efecto de la primera columna de la matriz <span class="math inline">\(\hat{B}\)</span> como un shock de demanda. La segunda y tercera columna representan, respectivamente, un shock de oferta y política monetaria.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(usa.cv<span class="sc">$</span>Lambda, <span class="dv">3</span>)</span></code></pre></div>
 <pre><code>##       [,1]  [,2]  [,3]
 ## [1,] 1.244 0.000 0.000
 ## [2,] 0.000 0.192 0.000
 ## [3,] 0.000 0.000 0.393</code></pre>
+<p>En cambio la matriz <span class="math inline">\(\hat{\lambda}\)</span> representa la varianza de los shocks estructurales en un segundo regimén, esto es posterior al quiebre estructural. Los autores interpretan a partir de la diagonal de <span class="math inline">\(\hat{\lambda}\)</span> que los shocks de oferta y política monetaria tiene baja varianza en comparación a los shocks de demanda.</p>
+<p>Los autores comparan estos resultados con los obtenidos por <span class="citation"><a href="#ref-Sims80" role="doc-biblioref">Sims</a> (<a href="#ref-Sims80" role="doc-biblioref">1980</a>)</span> utilizando la descomposición de la matriz de covarianza (<span class="math inline">\(\hat{B}\)</span>) como una matriz triangular inferior. La función <em>id.cv()</em> permite
+probar tales restricciones configurando para ello una matriz triangular inferior como se describe en el código siguiente.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>restMat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">9</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">1</span>, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>restMat</span></code></pre></div>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]   NA    0    0
+## [2,]   NA   NA    0
+## [3,]   NA   NA   NA</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>restricted.model <span class="ot">&lt;-</span> <span class="fu">id.cv</span>(plain.var, <span class="at">SB =</span> <span class="fu">c</span>(<span class="dv">1979</span>, <span class="dv">3</span>),<span class="at">restriction_matrix =</span> restMat)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(restricted.model)</span></code></pre></div>
+<pre><code>## 
+## Identification Results
+## ---------------------- 
+## 
+## Method: Changes in Volatility
+## Sample size: 169
+## Log-Likelihood: -568.6664
+## AIC: 1277.333
+## Structural Break: At Observation Number 59 during 1979 Q3
+## Number of GLS estimations: 23
+## Number of Restrictions: 3
+## 
+## Estimated unconditional Heteroscedasticity Matrix (Lambda):
+##         [,1]      [,2]      [,3]
+## x  0.3501948 0.0000000 0.0000000
+## pi 0.0000000 0.2346854 0.0000000
+## i  0.0000000 0.0000000 0.9420116
+## 
+## Standard Errors of Lambda:
+##          [,1]       [,2]     [,3]
+## x  0.08266738 0.00000000 0.000000
+## pi 0.00000000 0.05616318 0.000000
+## i  0.00000000 0.00000000 0.227189
+## 
+## Estimated B Matrix (unique decomposition of the covariance matrix): 
+##          [,1]      [,2]      [,3]
+## x  0.87988465 0.0000000 0.0000000
+## pi 0.08137972 1.5306503 0.0000000
+## i  0.31518384 0.2606745 0.7378484
+## 
+## Standard Errors of B:
+##          [,1]       [,2]       [,3]
+## x  0.08638851 0.00000000 0.00000000
+## pi 0.10334026 0.15169565 0.00000000
+## i  0.08527441 0.08620187 0.07354585
+## 
+## Identification Wald Test of equal Eigenvalues:
+## [1] 0.9420116 0.3501948 0.2346854
+##                              Test statistic dof p-value
+## lambda_ 1 =lambda_2                 4.04784   2  0.1321
+## lambda_ 1 =lambda_2=lambda_3        9.15413   5  0.1031
+## lambda_ 2 =lambda_3                 0.68408   2  0.7103
+## 
+## Likelihood Ratio Test: 
+##  Test statistic p-value  
+##           8.734   0.033 *
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Si partimos que los shocks structurales fueron identificados con la metodología de cambio en la matriz de covarianza, cualquier restricción impuesta sobre <span class="math inline">\(B\)</span> hace que el modelo esté sobre identificado y ello es posible probarse.</p>
+<p>En resumen el “likelihood ratio test” indica que bajo la <span class="math inline">\(H_{0}\)</span>
+que <span class="math inline">\(B\)</span> la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al <span class="math inline">\(5\%\)</span> de nivel de significancia. <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.</p>
+<p>El siguiente paso es calcular la función impulso respuesta (IFR) con un intervalo de confianza obtenido a partir del método “boostrap.” A partir de la IFR es posible investigar los efectos futuros de los shocks estructurales etiquetados como “económicos” sobre las variables
+incluidas en el modelo. De hecho de acuerdo a <span class="citation"><a href="#ref-Herwartz18" role="doc-biblioref">Herwartz</a> (<a href="#ref-Herwartz18" role="doc-biblioref">2018</a>)</span> aplicar la metodología "boostrap permite evaluar la significancia en los signos que se hacen patentes en la matriz <span class="math inline">\(\hat{B}\)</span>.</p>
+<p>Para aplicar lo anterior, definimos una lista con los signos que representan nuestras restricciones tanto para los shocks de demanda, oferta y política monetaria.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>signrest <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">demand =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">supply =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">monetary_policy =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div>
+<p>Notal que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">231</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>usa.cv.boot <span class="ot">&lt;-</span> <span class="fu">wild.boot</span>(usa.cv, <span class="at">design =</span> <span class="st">&quot;fixed&quot;</span>,<span class="at">distr =</span> <span class="st">&quot;rademacher&quot;</span>, <span class="at">nboot =</span> <span class="dv">1000</span>, <span class="at">n.ahead =</span> <span class="dv">15</span>,<span class="at">nc =</span> cores, <span class="at">signrest =</span> signrest)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(usa.cv.boot)</span></code></pre></div>
+<pre><code>## 
+## Bootstrap Results
+## ----------------- 
+## 
+## Method: Wild bootstrap
+## Bootstrap iterations: 1000
+## Distribution used: rademacher
+## Design: fixed
+## 
+## Point estimates: 
+##         [,1]       [,2]        [,3]
+## x  0.2241237 -0.5931964 -0.61193300
+## pi 0.1131134  1.2987520 -0.75559400
+## i  0.7084709  0.1572953  0.02899916
+## 
+## Bootstrap means: 
+##          [,1]       [,2]       [,3]
+## x  0.09580740 -0.5030485 -0.6303868
+## pi 0.09639712  1.1310905 -0.7720157
+## i  0.70100321  0.0364798 -0.1675659
+## 
+## Bootstrap standard errors: 
+##          [,1]      [,2]      [,3]
+## x  0.14143383 0.3077349 0.2494872
+## pi 0.17500155 0.4556690 0.5925734
+## i  0.07511879 0.2273595 0.2178134
+## 
+## Identified sign patterns: 
+## =========================
+## Specified sign pattern: 
+## 
+##    demand supply monetary_policy
+## x       1     -1              -1
+## pi      1      1              -1
+## i       1      1               1
+## 
+## Unique occurrence of single shocks according to sign pattern: 
+## demand : 65.5 % 
+## supply : 66 % 
+## monetary_policy : 28.4 % 
+## 
+## Joint occurrence of specified shocks: 12.7 %</code></pre>
+<p>Enseguida, graficamos para cada variable y shocks su IFR.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(usa.cv.boot, <span class="at">lowerq =</span> <span class="fl">0.16</span>, <span class="at">upperq =</span> <span class="fl">0.84</span>)</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>En resumen solamente el 12.7% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
+El signo del patron de shocks monetario esperado aparece en un 28.4%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.</p>
 </div>
-<div id="función-impulso-respuesta" class="section level2" number="1.2">
-<h2><span class="header-section-number">1.2</span> Función Impulso Respuesta</h2>
+<div id="función-impulso-respuesta-1" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> Función Impulso Respuesta</h2>
 <p>La función impulso respuesta es la senda que sigue una serie cuando enfrenta un shock unitario.</p>
 <p>Es interesantes por:</p>
 <ol style="list-style-type: decimal">
@@ -1000,13 +1242,6 @@ de los choques. El siguiente código ordena las columnas de la misma manera.</p>
 </ol>
 <p>Para una proceso AR(1) <span class="math inline">\(y_{t}=\phi y_{t-1}+\epsilon_{t}\)</span> el cual lo expresamos en MA(<span class="math inline">\(\infty\)</span>) como <span class="math inline">\(y_{t}=\sum_{j=0}^{\infty}\phi^{j} \epsilon_{t-j}\)</span>, su impulso respuesta es:</p>
 <p><span class="math inline">\(\begin{array}{cccccccc} \epsilon_{t} &amp;\colon &amp;0&amp;0&amp;1&amp;0&amp;0&amp;0 \\ x_{t} &amp;\colon &amp;0&amp;0&amp;\phi&amp;\phi^{2}&amp;\phi^{3}&amp;\cdots \end{array}\)</span></p>
-<p>Similarmente para un proceso MA(<span class="math inline">\(\infty\)</span>): <span class="math inline">\(y_{t}=\sum_{j=0}^{\infty}\theta \epsilon_{t-j}\)</span>, su impulso respuesta es:</p>
-<p><span class="math inline">\(\begin{array}{cccccccc}  \epsilon_{t} &amp;\colon &amp;0&amp;0&amp;1&amp;0&amp;0&amp;0 \\  x_{t} &amp;\colon &amp;0&amp;0&amp;\theta&amp;\theta_{2}&amp;\theta_{3}&amp;\cdots \end{array}\)</span></p>
-<p>¿Por qué es importante definir un proceso como un MA<span class="math inline">\((\infty)\)</span>?</p>
-<ol style="list-style-type: decimal">
-<li>La representación MA infinito de todo proceso es <em>la función impulso respuesta</em></li>
-<li>La función impulso respuesta es equivalente a <span class="math inline">\(E_{t}(x_{t+h})-E_{t-1}(x_{t+h})\)</span></li>
-</ol>
 <p>Representación de un proceso ARMA como un vector AR(1)</p>
 <p>Supongamos que tenemos un proceso ARMA(2,1):</p>
 <p><span class="math inline">\(y_t = \phi_1y_{t-1} + \phi_2y_{t-2} + \epsilon_t + \theta_1\epsilon_{t-1}\)</span></p>
@@ -1038,13 +1273,13 @@ y_{t-2} \\
 <p>Lo cual podemos escribir en forma AR(1) como:</p>
 <p><span class="math inline">\(x_t = Ax_{t−1} + Cw_t\)</span></p>
 </div>
-<div id="función-impulso-respuesta-en-una-representación-var" class="section level2" number="1.3">
-<h2><span class="header-section-number">1.3</span> Función Impulso Respuesta en una representación VAR</h2>
+<div id="función-impulso-respuesta-en-una-representación-var" class="section level2" number="1.6">
+<h2><span class="header-section-number">1.6</span> Función Impulso Respuesta en una representación VAR</h2>
 <p>Similarmente en VAR: <span class="math inline">\(x_t = Ax_{t−1} + Cw_t\)</span>, su impulso respuesta es:</p>
 <p><span class="math inline">\(C, \;\; AC, \;\; A^{2}C, \;\; \cdots, \;\;A^{k}C, \;\;\cdots\)</span></p>
 </div>
-<div id="ortogonalización" class="section level2" number="1.4">
-<h2><span class="header-section-number">1.4</span> Ortogonalización</h2>
+<div id="ortogonalización" class="section level2" number="1.7">
+<h2><span class="header-section-number">1.7</span> Ortogonalización</h2>
 <p>La función impulso respuesta de un VAR es ligeramente ambigua.</p>
 <p>Sabemos que podemos representar cualquier serie de tiempo como una arbitraria combinación lineal de un conjunto de funciones de impulso respuestas.</p>
 <p>Entonces la <em>Ortogonalización</em> se refiere al proceso de seleccionar uno de las posibles funciones de impulsos respuestas que sea más interesante para el análisis económico.</p>
@@ -1073,8 +1308,8 @@ x_{t}&amp;=C(L)\eta_{t},\;\;C(L)=B(L)Q^{-1}
 <p>Pero ¿Qué combinación lineal deberíamos observar?</p>
 <p>Es de notar que los datos no nos pueden ayudar ya que tanto la representación son equivalentes y producen las mismas series. Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados <em>supuestos de ortogonalización</em>.</p>
 </div>
-<div id="supuestos-de-ortogonalización" class="section level2" number="1.5">
-<h2><span class="header-section-number">1.5</span> Supuestos de Ortogonalización</h2>
+<div id="supuestos-de-ortogonalización" class="section level2" number="1.8">
+<h2><span class="header-section-number">1.8</span> Supuestos de Ortogonalización</h2>
 <p>El primero y quizás el más popular supuesto es que los shocks son ortogonales (no están correlacionados).</p>
 <p>Si dos shocks <span class="math inline">\(\epsilon_{yt}\)</span> y <span class="math inline">\(\epsilon_{zt}\)</span> están correlacionados entonces no tiene sentido preguntarse, ¿qué pasa si <span class="math inline">\(\epsilon_{yt}\)</span> se impulsa en una unidad?, pues obviamente también se estaría moviendo <span class="math inline">\(\epsilon_{zt}\)</span> al mismo tiempo.</p>
 <p>Un ejemplo concreto, nosotros queremos saber la función impulso respuesta en términos causales, es decir el <em>efecto</em> de las remesa en el PIB. Pero si el shock de las remesas está correlacionado al shock del PIB, no podemos saber si lo que estamos viendo como respuesta del PIB a un shock de remesas es debido a un shock en el PIB del país de origen de las remesas.</p>
@@ -1085,8 +1320,8 @@ Q^{-1}Q^{-1&#39;}&amp;=\Sigma \\
 E(\eta_{t}\eta_{t}^{&#39;})&amp;=E(Q\epsilon_{t}\epsilon_{t}^{&#39;}Q^{&#39;})=Q\Sigma Q^{&#39;}=I\nonumber
 \end{align}\]</span></p>
 </div>
-<div id="ortogonalización-de-sims" class="section level2" number="1.6">
-<h2><span class="header-section-number">1.6</span> Ortogonalización de Sims</h2>
+<div id="ortogonalización-de-sims" class="section level2" number="1.9">
+<h2><span class="header-section-number">1.9</span> Ortogonalización de Sims</h2>
 <p>Una vía de construir la matriz Q es por la descomposición de Choleski.\
 Desafortunadamente, existe muchas matrices Q que pueden hacer cumplir la identidad (22), entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizara la teoría económica para especificar C(0) y C(1).</p>
 <p>Sims sugiere que se especifica las propiedades de C(0).</p>
@@ -1139,8 +1374,8 @@ C(0)&amp;=B(0)Q^{-1}=Q^{-1} \nonumber\\
 \end{align}\]</span></p>
 <p>Entonces lo importante es decidir el orden de prelación <em>De lo exógeno a lo endógeno</em> de las variables en el VAR; auxiliándose de la teoría económica.</p>
 </div>
-<div id="bla-bla" class="section level2" number="1.7">
-<h2><span class="header-section-number">1.7</span> BLA Bla</h2>
+<div id="bla-bla" class="section level2" number="1.10">
+<h2><span class="header-section-number">1.10</span> BLA Bla</h2>
 <p>La estructura del modelo determina el orden de prelación de cada una de las variables y las restricciones de corto plazo.
 El vector está dado por X=[y, <span class="math inline">\(\pi\)</span>, i, NPL, L, e] y se establece un SVAR de la forma <span class="math inline">\(AX=X_{-1}+u\)</span>, en el que A contiene las restricciones y con el cual se identifica los shocks.
 Los datos utilizados tienen la siguiente características:}</p>
@@ -1167,11 +1402,17 @@ e\end{bmatrix}
 <h1>Referencias</h1>
 
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-Herwartz18" class="csl-entry">
+Herwartz, Helmut. 2018. <span>“<span class="nocase">Hodges–Lehmann Detection of Structural Shocks – An Analysis of Macroeconomic Dynamics in the Euro Area</span>.”</span> <em>Oxford Bulletin of Economics and Statistics</em> 80 (4): 736–54. <a href="https://doi.org/10.1111/obes.12234">https://doi.org/10.1111/obes.12234</a>.
+</div>
 <div id="ref-Herwartz2016" class="csl-entry">
 Herwartz, Helmut, and Martin Plödt. 2016. <span>“<span class="nocase">Simulation Evidence on Theory-based and Statistical Identification under Volatility Breaks</span>.”</span> <em>Oxford Bulletin of Economics and Statistics</em> 78 (1): 94–112. <a href="https://ideas.repec.org/a/bla/obuest/v78y2016i1p94-112.html">https://ideas.repec.org/a/bla/obuest/v78y2016i1p94-112.html</a>.
 </div>
 <div id="ref-SVAR21" class="csl-entry">
 Lange, Alexander, Bernhard Dalheimer, Helmut Herwartz, and Simone Maxand. 2021. <span>“Svars: An r Package for Data-Driven Identification in Multivariate Time Series Analysis.”</span> <em>Journal of Statistical Software</em> 97 (5): 1–34. <a href="https://doi.org/10.18637/jss.v097.i05">https://doi.org/10.18637/jss.v097.i05</a>.
+</div>
+<div id="ref-Sims80" class="csl-entry">
+Sims, Christopher A. 1980. <span>“<span class="nocase">Macroeconomics and Reality</span>.”</span> <em>Econometrica</em> 48 (1): 1–48. <a href="https://ideas.repec.org/a/ecm/emetrp/v48y1980i1p1-48.html">https://ideas.repec.org/a/ecm/emetrp/v48y1980i1p1-48.html</a>.
 </div>
 <div id="ref-Stock2003" class="csl-entry">
 Stock, James H., and Mark W. Watson. 2003. <span>“<span class="nocase">Has the Business Cycle Changed and Why?</span>”</span> In <em><span>NBER Macroeconomics Annual 2002, Volume 17</span></em>, 159–230. NBER Chapters. National Bureau of Economic Research, Inc. <a href="https://ideas.repec.org/h/nbr/nberch/11075.html">https://ideas.repec.org/h/nbr/nberch/11075.html</a>.
