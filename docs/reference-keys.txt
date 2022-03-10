@@ -2,10 +2,8 @@ introducción
 el-modelo-de-vectores-autoregresivos-var
 función-impulso-respuesta
 vectores-autoregresivos-estructurales
-paquete-en-r
-función-impulso-respuesta-1
-función-impulso-respuesta-en-una-representación-var
 ortogonalización
 supuestos-de-ortogonalización
 ortogonalización-de-sims
+paquete-en-r
 bla-bla
