@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-03-14"
+date: "2022-03-15"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -183,7 +183,7 @@ Si asumimos que los *errores estructurales* que integran el vector $w_{t}$ son r
 Para ver lo anterior, multiplicamos la ecuación anterior por $A^{-1}$:
 
 \begin{align}
-x_t &= A^{-1}A\Gammax_{t−1} + A^{-1}Bw_t\\
+x_t &= A^{-1}A\Gamma x_{t−1} + A^{-1}Bw_t\\
 x_t &= \Gamma x_{t−1} + \eta_t
 \end{align}
 
@@ -239,7 +239,7 @@ A^{*}(L)x_{t}&=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w
 
 Si definimos la matriz B en función de sus rezagos:
 \begin{equation}
-B=\left( \begin{array}{cccc}
+B^{*}=\left( \begin{array}{cccc}
 L      & NA  & \cdots & NA\\
 \Phi_{1,2} & L   &        & NA\\
 \vdots &     & \ddots & NA\\
@@ -252,12 +252,12 @@ L      & NA  & \cdots & NA\\
 En notación MA se escribe:
 
 \begin{align}
-x_{t}&=B(L)w_{t},\;\;B(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
+x_{t}&=B^{*}(L)w_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
 \end{align}   
 
 
 
-Donde $B(L)=A^{*}(L)^{-1}$, siendo $B(L)$ la respuesta de $x_{t}$ a una unidad de impulso de cada elemento de $e_{t}$    
+Donde $B^{*}(L)=A^{*}(L)^{-1}$, siendo $B^{*}(L)$ la respuesta de $x_{t}$ a una unidad de impulso de cada elemento de $e_{t}$    
 
 Ahora supongase que queremos calcular la respuesta de $x_{t}$ a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de $x_{t}$ de un schocks tal que: $\eta_{1t}=e_{\pi t}$ y  $\eta_{2t}=5e_{\pi t}+e_{mt}$ ó:
 \begin{equation}
@@ -270,14 +270,14 @@ Ahora supongase que queremos calcular la respuesta de $x_{t}$ a un nuevo shock, 
 
 Con ello podemos reescribir el VAR en notación MA:
 \begin{align}
-x_{t}&=C(L)\eta_{t},\;\;C(L)=B(L)Q^{-1}
+x_{t}&=C(L)\eta_{t},\;\;C(L)=B^{*}(L)Q^{-1}
 \end{align}
 
-Donde C(L) representa la respuesta de $x_{t}$ a los schocks $\eta_{t}$, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales B(L).
+Donde C(L) representa la respuesta de $x_{t}$ a los schocks $\eta_{t}$, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales $B^{*}(L)$.
 
 Pero ¿Qué combinación lineal deberíamos observar?
 
-Es de notar que los datos no nos pueden ayudar ya que tanto la representación $x_{t}=B(L)w_{t}$ y $x_{t}=C(L)\eta_{t}$ son equivalentes y producen las mismas series. 
+Es de notar que los datos no nos pueden ayudar ya que tanto la representación $x_{t}=B^{*}(L)w_{t}$ y $x_{t}=C(L)\eta_{t}$ son equivalentes y producen las mismas series. 
 
 Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados *supuestos de ortogonalización*.
 
@@ -356,7 +356,7 @@ En resumen se puede unicamente especificar la matriz Q como una combinación lin
 
 Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior Q:
 \begin{align}
-C(0)&=B(0)Q^{-1}=Q^{-1} \nonumber\\
+C(0)&=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
 \end{align}
 
 Entonces lo importante es decidir el orden de prelación *De lo exógeno a lo endógeno* de las variables en el VAR; auxiliándose de la teoría económica.
@@ -391,7 +391,7 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-latex/unnamed-chunk-3-1.pdf)<!-- --> 
+![](01-conceptos_files/figure-epub3/unnamed-chunk-3-1.png)<!-- -->
 
 Seguidamente se estimara la forma reducida de un VAR, aplicaremos una especificación que incluya intercepto y hasta seis rezagos (p=6)
 
@@ -644,7 +644,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-latex/unnamed-chunk-12-1.pdf)<!-- --> 
+![](01-conceptos_files/figure-epub3/unnamed-chunk-12-1.png)<!-- -->
 
 En resumen solamente el 12.7% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
 El signo del patron de shocks monetario esperado aparece en un 28.4%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.

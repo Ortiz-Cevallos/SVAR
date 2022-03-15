@@ -24,7 +24,7 @@
 <meta name="author" content="Luis Ortiz-Cevallos" />
 
 
-<meta name="date" content="2022-03-14" />
+<meta name="date" content="2022-03-15" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -899,7 +899,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="header">
 <h1 class="title">VECTORES AUTOREGRESIVOS (VAR)</h1>
 <p class="author"><em><a href="https://ortiz-cevallos.github.io/MYSELF/">Luis Ortiz-Cevallos</a></em></p>
-<p class="date"><em>2022-03-14</em></p>
+<p class="date"><em>2022-03-15</em></p>
 </div>
 <div id="introducción" class="section level1" number="1">
 <h1><span class="header-section-number">Capítulo 1</span> INTRODUCCIÓN</h1>
@@ -1035,7 +1035,7 @@ Ax_t = A\Gamma x_{t−1} + Bw_t
 <p>Si asumimos que los <em>errores estructurales</em> que integran el vector <span class="math inline">\(w_{t}\)</span> son ruido blanco, y que los coeficientes en la matriz <span class="math inline">\(\Gamma\)</span> son <em>estructurales</em> los cuales difieran de sus contrapartes en su forma reducida.</p>
 <p>Para ver lo anterior, multiplicamos la ecuación anterior por <span class="math inline">\(A^{-1}\)</span>:</p>
 <p><span class="math display">\[\begin{align}
-x_t &amp;= A^{-1}A\Gammax_{t−1} + A^{-1}Bw_t\\
+x_t &amp;= A^{-1}A\Gamma x_{t−1} + A^{-1}Bw_t\\
 x_t &amp;= \Gamma x_{t−1} + \eta_t
 \end{align}\]</span></p>
 <p>Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B.</p>
@@ -1074,7 +1074,7 @@ A^{*}(L)x_{t}&amp;=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w
 \end{align}\]</span></p>
 <p>Si definimos la matriz B en función de sus rezagos:
 <span class="math display">\[\begin{equation}
-B=\left( \begin{array}{cccc}
+B^{*}=\left( \begin{array}{cccc}
 L      &amp; NA  &amp; \cdots &amp; NA\\
 \Phi_{1,2} &amp; L   &amp;        &amp; NA\\
 \vdots &amp;     &amp; \ddots &amp; NA\\
@@ -1084,9 +1084,9 @@ L      &amp; NA  &amp; \cdots &amp; NA\\
 \end{equation}\]</span></p>
 <p>En notación MA se escribe:</p>
 <p><span class="math display">\[\begin{align}
-x_{t}&amp;=B(L)w_{t},\;\;B(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
+x_{t}&amp;=B^{*}(L)w_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
 \end{align}\]</span></p>
-<p>Donde <span class="math inline">\(B(L)=A^{*}(L)^{-1}\)</span>, siendo <span class="math inline">\(B(L)\)</span> la respuesta de <span class="math inline">\(x_{t}\)</span> a una unidad de impulso de cada elemento de <span class="math inline">\(e_{t}\)</span></p>
+<p>Donde <span class="math inline">\(B^{*}(L)=A^{*}(L)^{-1}\)</span>, siendo <span class="math inline">\(B^{*}(L)\)</span> la respuesta de <span class="math inline">\(x_{t}\)</span> a una unidad de impulso de cada elemento de <span class="math inline">\(e_{t}\)</span></p>
 <p>Ahora supongase que queremos calcular la respuesta de <span class="math inline">\(x_{t}\)</span> a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de <span class="math inline">\(x_{t}\)</span> de un schocks tal que: <span class="math inline">\(\eta_{1t}=e_{\pi t}\)</span> y <span class="math inline">\(\eta_{2t}=5e_{\pi t}+e_{mt}\)</span> ó:
 <span class="math display">\[\begin{equation}
 \eta_{t}=Qw_t,\;\;Q=\left( \begin{array}{cc}
@@ -1097,11 +1097,11 @@ x_{t}&amp;=B(L)w_{t},\;\;B(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w
 \end{equation}\]</span></p>
 <p>Con ello podemos reescribir el VAR en notación MA:
 <span class="math display">\[\begin{align}
-x_{t}&amp;=C(L)\eta_{t},\;\;C(L)=B(L)Q^{-1}
+x_{t}&amp;=C(L)\eta_{t},\;\;C(L)=B^{*}(L)Q^{-1}
 \end{align}\]</span></p>
-<p>Donde C(L) representa la respuesta de <span class="math inline">\(x_{t}\)</span> a los schocks <span class="math inline">\(\eta_{t}\)</span>, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales B(L).</p>
+<p>Donde C(L) representa la respuesta de <span class="math inline">\(x_{t}\)</span> a los schocks <span class="math inline">\(\eta_{t}\)</span>, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales <span class="math inline">\(B^{*}(L)\)</span>.</p>
 <p>Pero ¿Qué combinación lineal deberíamos observar?</p>
-<p>Es de notar que los datos no nos pueden ayudar ya que tanto la representación <span class="math inline">\(x_{t}=B(L)w_{t}\)</span> y <span class="math inline">\(x_{t}=C(L)\eta_{t}\)</span> son equivalentes y producen las mismas series.</p>
+<p>Es de notar que los datos no nos pueden ayudar ya que tanto la representación <span class="math inline">\(x_{t}=B^{*}(L)w_{t}\)</span> y <span class="math inline">\(x_{t}=C(L)\eta_{t}\)</span> son equivalentes y producen las mismas series.</p>
 <p>Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados <em>supuestos de ortogonalización</em>.</p>
 </div>
 <div id="supuestos-de-ortogonalización" class="section level2" number="1.5">
@@ -1161,7 +1161,7 @@ m_{t}&amp;=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_
 </ol>
 <p>Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior Q:
 <span class="math display">\[\begin{align}
-C(0)&amp;=B(0)Q^{-1}=Q^{-1} \nonumber\\
+C(0)&amp;=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
 \end{align}\]</span></p>
 <p>Entonces lo importante es decidir el orden de prelación <em>De lo exógeno a lo endógeno</em> de las variables en el VAR; auxiliándose de la teoría económica.</p>
 </div>
