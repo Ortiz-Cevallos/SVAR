@@ -875,8 +875,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="1.4" data-path=""><a href="#ortogonalización"><i class="fa fa-check"></i><b>1.4</b> Ortogonalización</a></li>
 <li class="chapter" data-level="1.5" data-path=""><a href="#supuestos-de-ortogonalización"><i class="fa fa-check"></i><b>1.5</b> Supuestos de Ortogonalización</a></li>
 <li class="chapter" data-level="1.6" data-path=""><a href="#ortogonalización-de-sims"><i class="fa fa-check"></i><b>1.6</b> Ortogonalización de Sims</a></li>
-<li class="chapter" data-level="1.7" data-path=""><a href="#paquete-en-r"><i class="fa fa-check"></i><b>1.7</b> Paquete en R</a></li>
-<li class="chapter" data-level="1.8" data-path=""><a href="#bla-bla"><i class="fa fa-check"></i><b>1.8</b> BLA Bla</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path=""><a href="#paquetes-en-r"><i class="fa fa-check"></i><b>2</b> Paquetes en R</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path=""><a href="#paquete-svars"><i class="fa fa-check"></i><b>2.1</b> Paquete SVARS</a></li>
+<li class="chapter" data-level="2.2" data-path=""><a href="#bla-bla"><i class="fa fa-check"></i><b>2.2</b> BLA Bla</a></li>
 </ul></li>
 <li class="chapter" data-level="" data-path=""><a href="#referencias"><i class="fa fa-check"></i>Referencias</a></li>
 </ul>
@@ -1165,26 +1168,153 @@ C(0)&amp;=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
 \end{align}\]</span></p>
 <p>Entonces lo importante es decidir el orden de prelación <em>De lo exógeno a lo endógeno</em> de las variables en el VAR; auxiliándose de la teoría económica.</p>
 </div>
-<div id="paquete-en-r" class="section level2" number="1.7">
-<h2><span class="header-section-number">1.7</span> Paquete en R</h2>
+</div>
+<div id="paquetes-en-r" class="section level1" number="2">
+<h1><span class="header-section-number">Capítulo 2</span> Paquetes en R</h1>
+<div id="paquete-svars" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Paquete SVARS</h2>
 <p>En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R <em>SVARS</em> elaborado por <span class="citation"><a href="#ref-SVAR21" role="doc-biblioref">Lange et al.</a> (<a href="#ref-SVAR21" role="doc-biblioref">2021</a>)</span>. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages(&quot;svars&quot;)</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;svars&quot;</span>)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;ggplot2&quot;</span>)</span></code></pre></div>
-<p>Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto, la inflación de trimestre a trimestre del deflactor del PIB y una tasa de interés nominal del fondo federal.</p>
+<p>Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto (x), la inflación de trimestre a trimestre del deflactor del PIB (<span class="math inline">\(\pi\)</span>) y una tasa de interés nominal del fondo federal (i).</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;USA&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>usa<span class="ot">&lt;-</span><span class="fu">as.zoo</span>(USA)</span></code></pre></div>
+<p>A continuación se aplicará el método de <em>ortogonalización de Sims</em> (<span class="citation"><a href="#ref-Sims80" role="doc-biblioref">Sims</a> (<a href="#ref-Sims80" role="doc-biblioref">1980</a>)</span>) el cual consiste en asumir que la matriz <span class="math inline">\(C(0)\)</span> es una matriz triangular inferior.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>C <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">9</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>C[<span class="dv">1</span>, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>C[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>C</span></code></pre></div>
+<pre><code>##      [,1] [,2] [,3]
+## [1,]   NA    0    0
+## [2,]   NA   NA    0
+## [3,]   NA   NA   NA</code></pre>
+<p>Luego estimamos el SVAR con esa restricción</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>plain.var <span class="ot">&lt;-</span> vars<span class="sc">::</span><span class="fu">VAR</span>(USA, <span class="at">p =</span> <span class="dv">6</span>, <span class="at">type =</span> <span class="st">&#39;const&#39;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>Sims_mdl  <span class="ot">&lt;-</span> <span class="fu">SVAR</span>(plain.var, <span class="at">estmethod=</span><span class="st">&quot;direct&quot;</span>, <span class="at">Bmat =</span> C)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(Sims_mdl)</span></code></pre></div>
+<pre><code>## 
+## SVAR Estimation Results:
+## ======================== 
+## 
+## Call:
+## SVAR(x = plain.var, estmethod = &quot;direct&quot;, Bmat = C)
+## 
+## Type: B-model 
+## Sample size: 169 
+## Log Likelihood: -722.095 
+## Method: direct 
+## Number of iterations: 501 
+## Convergence code: 1 
+## 
+## Estimated A matrix:
+##    x pi i
+## x  1  0 0
+## pi 0  1 0
+## i  0  0 1
+## 
+## Estimated B matrix:
+##          x     pi     i
+## x   1.0339 0.0000 0.000
+## pi -0.8068 1.0500 0.000
+## i  -1.0568 0.3056 0.936
+## 
+## Covariance matrix of reduced form residuals (*100):
+##          x     pi      i
+## x   106.90 -83.42 -109.3
+## pi  -83.42 175.33  117.3
+## i  -109.26 117.34  208.6</code></pre>
+<p>Y representamos la función impulso respuesta ante un shock en <span class="math inline">\(\pi\)</span>.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Sims.irf <span class="ot">&lt;-</span> <span class="fu">irf</span>(Sims_mdl, <span class="at">impulse =</span> <span class="st">&quot;pi&quot;</span>, <span class="at">response =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">n.ahead =</span> <span class="dv">48</span>, <span class="at">boot =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>RESULTADO<span class="ot">&lt;-</span><span class="fu">as.data.frame</span>(Sims.irf<span class="sc">$</span>irf<span class="sc">$</span>pi)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>PERIODO<span class="ot">&lt;-</span><span class="fu">seq</span>(<span class="dv">1</span>,<span class="dv">49</span>,<span class="dv">1</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>RESULTADO <span class="ot">&lt;-</span><span class="fu">cbind</span>(RESULTADO,PERIODO)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="do">####HACER MI PROPIO GRÁFICO###################</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggthemes)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>Data_LONG <span class="ot">&lt;-</span> <span class="fu">gather</span>(RESULTADO, <span class="at">key=</span><span class="st">&quot;code&quot;</span>, <span class="at">value=</span><span class="st">&quot;YY&quot;</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;pi&quot;</span>, <span class="st">&quot;i&quot;</span>))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>paleta_code_bar<span class="ot">&lt;-</span>  <span class="fu">c</span>(<span class="st">&quot;#C00000&quot;</span>, <span class="st">&quot;#E26B0A&quot;</span>, <span class="st">&quot;#92D050&quot;</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>P<span class="ot">&lt;-</span> <span class="fu">ggplot</span>(<span class="at">data =</span> Data_LONG, <span class="fu">aes</span>(<span class="at">x =</span> PERIODO, <span class="at">y =</span>YY , <span class="at">group =</span> code,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">colour=</span>code))</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>P<span class="ot">&lt;-</span>P<span class="sc">+</span><span class="fu">labs</span>(<span class="at">y=</span><span class="st">&quot;Respuesta (%)&quot;</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">x=</span><span class="st">&quot;Períodos&quot;</span>)<span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept=</span><span class="dv">0</span>, <span class="at">linetype=</span><span class="st">&quot;dashed&quot;</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size=</span><span class="dv">1</span>)<span class="sc">+</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size=</span><span class="fl">1.5</span>)<span class="sc">+</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values=</span>paleta_code_bar)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>P<span class="ot">&lt;-</span>P<span class="sc">+</span><span class="fu">theme</span>(<span class="at">axis.line.x =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">0.5</span>),</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.line.y.left  =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">0.5</span>),</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.line.y.right =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.text.x =</span> <span class="fu">element_text</span>( <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="dv">14</span>),</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>           <span class="at">axis.text.y =</span> <span class="fu">element_text</span>( <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>           <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>           <span class="at">panel.grid.major.y =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>           <span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>           <span class="at">panel.border =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>           <span class="at">panel.background =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.key=</span><span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;white&quot;</span>, <span class="at">colour =</span> <span class="st">&quot;white&quot;</span>,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">color =</span> <span class="st">&quot;white&quot;</span>, <span class="at">inherit.blank =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.text  =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">10</span>),</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.position=</span><span class="fu">c</span>(.<span class="dv">4</span>,.<span class="dv">85</span>),</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.spacing.x =</span> <span class="fu">unit</span>(<span class="fl">0.10</span>, <span class="st">&#39;cm&#39;</span>),</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.margin=</span><span class="fu">margin</span>(),</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>           <span class="at">legend.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;white&quot;</span>, <span class="at">colour =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">color =</span> <span class="st">&quot;white&quot;</span>, <span class="at">inherit.blank =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>)<span class="sc">+</span><span class="fu">guides</span>(<span class="at">color =</span> <span class="fu">guide_legend</span>(<span class="at">nrow =</span> <span class="dv">1</span>))</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>P</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Finalmente, podemos observar la descomposición de la varianza de la variable <span class="math inline">\(\pi\)</span>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fevd.p <span class="ot">&lt;-</span> <span class="fu">fevd</span>(Sims_mdl, <span class="at">n.ahead =</span> <span class="dv">48</span>)<span class="sc">$</span>p</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>RESULTADO<span class="ot">&lt;-</span><span class="fu">as.data.frame</span>(fevd.p)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>PERIODO<span class="ot">&lt;-</span><span class="fu">seq</span>(<span class="dv">1</span>,<span class="dv">48</span>,<span class="dv">1</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>RESULTADO <span class="ot">&lt;-</span><span class="fu">cbind</span>(RESULTADO,PERIODO)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>BASE_LONG <span class="ot">&lt;-</span> <span class="fu">gather</span>(RESULTADO, <span class="at">key=</span><span class="st">&quot;measure&quot;</span>, <span class="at">value=</span><span class="st">&quot;value&quot;</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">c</span>(<span class="st">&quot;x&quot;</span>, <span class="st">&quot;pi&quot;</span>, <span class="st">&quot;i&quot;</span>))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>paleta<span class="ot">&lt;-</span><span class="fu">c</span>(<span class="st">&quot;#66C2A5&quot;</span>,<span class="st">&quot;#8DA0CB&quot;</span>, <span class="st">&quot;#E78AC3&quot;</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>Z<span class="ot">&lt;-</span><span class="fu">ggplot</span>(BASE_LONG, <span class="fu">aes</span>(<span class="at">x=</span>PERIODO, <span class="at">y=</span>value, <span class="at">fill=</span>measure))<span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(<span class="at">stat=</span><span class="st">&#39;identity&#39;</span>)<span class="sc">+</span><span class="fu">labs</span>(<span class="at">y=</span><span class="st">&quot;&quot;</span>, <span class="at">x=</span><span class="st">&quot;&quot;</span>)<span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> paleta)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>Z<span class="ot">&lt;-</span>Z<span class="sc">+</span><span class="fu">labs</span>(<span class="at">y=</span><span class="st">&quot;Varianza (%)&quot;</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">x=</span><span class="st">&quot;Períodos&quot;</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>Z<span class="ot">&lt;-</span>Z<span class="sc">+</span><span class="fu">theme_classic</span>()<span class="sc">+</span><span class="fu">theme</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">axis.line.x        =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">0.5</span>),</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">axis.line.y.left   =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">0.5</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">axis.line.y.right  =</span> <span class="fu">element_line</span>(<span class="at">colour =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="fl">0.5</span>),</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">axis.text.x        =</span> <span class="fu">element_text</span>( <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">axis.text.y        =</span> <span class="fu">element_text</span>( <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">size =</span> <span class="dv">12</span>),</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">panel.grid.major.y =</span> <span class="fu">element_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">linetype =</span> <span class="st">&#39;solid&#39;</span>, <span class="at">colour =</span> <span class="st">&quot;#EAEAF2&quot;</span>),</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">panel.grid.major.x =</span> <span class="fu">element_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">linetype =</span> <span class="st">&#39;solid&#39;</span>, <span class="at">colour =</span> <span class="st">&quot;#EAEAF2&quot;</span>),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">panel.grid.minor.x =</span> <span class="fu">element_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">linetype =</span> <span class="st">&#39;solid&#39;</span>, <span class="at">colour =</span> <span class="st">&quot;#EAEAF2&quot;</span>),</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">panel.grid.minor.y =</span> <span class="fu">element_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>,</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">linetype =</span> <span class="st">&#39;solid&#39;</span>, <span class="at">colour =</span> <span class="st">&quot;#EAEAF2&quot;</span>),</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">strip.background.x =</span> <span class="fu">element_rect</span>(<span class="at">colour=</span><span class="st">&quot;black&quot;</span>, <span class="at">fill=</span><span class="st">&quot;gray&quot;</span>),</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">strip.text.x       =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">20</span>, <span class="at">color =</span> <span class="st">&quot;black&quot;</span>, <span class="at">face =</span> <span class="st">&quot;bold.italic&quot;</span>),</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.title =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.text  =</span> <span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">18</span>),</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.position=</span><span class="st">&quot;bottom&quot;</span>,</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.spacing.x =</span> <span class="fu">unit</span>(<span class="fl">0.20</span>, <span class="st">&#39;cm&#39;</span>),</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.margin=</span><span class="fu">margin</span>(),</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">legend.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">&quot;white&quot;</span>, <span class="at">colour =</span> <span class="st">&quot;transparent&quot;</span>,</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">color =</span> <span class="st">&quot;white&quot;</span>, <span class="at">inherit.blank =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>)<span class="sc">+</span><span class="fu">guides</span>(<span class="at">color =</span> <span class="fu">guide_legend</span>(<span class="at">nrow =</span> <span class="dv">1</span>))</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>Z</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <p>A continuación se replicará los resultados obtenidos por <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span>, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función <em>id.cv()</em> dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.</p>
 <p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> argumentan que el punto de quiebra se dio en el tercer trimestre de 1979 donde aconteció un cambio en la política de la Reserva Federal que redujo la volatilidad de las variables macroeconómicas (ver <span class="citation"><a href="#ref-Stock2003" role="doc-biblioref">Stock and Watson</a> (<a href="#ref-Stock2003" role="doc-biblioref">2003</a>)</span>)</p>
 <p>Lo anterior es posible visualizarlo.
 Un primer paso es visualizar cada una de las series.</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(usa, <span class="at">facets =</span> T) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">&#39;Evolución de series de USA&#39;</span>)</span></code></pre></div>
-<p><img src="01-conceptos_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
-<p>Seguidamente se estimara la forma reducida de un VAR, aplicaremos una especificación que incluya intercepto y hasta seis rezagos (p=6)</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>plain.var <span class="ot">&lt;-</span> vars<span class="sc">::</span><span class="fu">VAR</span>(USA, <span class="at">p =</span> <span class="dv">6</span>, <span class="at">type =</span> <span class="st">&#39;const&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(usa, <span class="at">facets =</span> T) <span class="sc">+</span> <span class="fu">theme_bw</span>() <span class="sc">+</span> <span class="fu">ylab</span>(<span class="st">&#39;Evolución de series de USA&#39;</span>)</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>Con base en el objeto VAR podemos estimar su forma estructural con la función <em>id.cv()</em> la cual introduce el <em>cambio en la varianza</em> que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento <em>SB</em> en formato <em>ts</em>:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>usa.cv <span class="ot">&lt;-</span> <span class="fu">id.cv</span>(plain.var, <span class="at">SB =</span> <span class="fu">c</span>(<span class="dv">1979</span>, <span class="dv">3</span>))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(usa.cv)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>usa.cv <span class="ot">&lt;-</span> <span class="fu">id.cv</span>(plain.var, <span class="at">SB =</span> <span class="fu">c</span>(<span class="dv">1979</span>, <span class="dv">3</span>))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(usa.cv)</span></code></pre></div>
 <pre><code>## 
 ## Identification Results
 ## ---------------------- 
@@ -1229,25 +1359,25 @@ Un primer paso es visualizar cada una de las series.</p>
 ## lambda_ 2 =lambda_3                  2.1465   2 0.34189  
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
-<p>Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se verá más adelante) de la siguiente forma:</p>
+<p>Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se vió anteriormente) de la siguiente forma:</p>
 <p><span class="math display">\[\begin{align}
-x_{t}&amp;=B(L)\epsilon_{t},\;\;B(0)=I,\;\;E(\epsilon_{t}\epsilon_{t}^{&#39;})=\Sigma 
-\end{align}\]</span><br />
-Los resultados muestran la matriz de covarianza estimada <span class="math inline">\(\hat{B}\)</span>, la matriz de cambio en la convarianza estiamda <span class="math inline">\(\hat{\lambda}\)</span>.</p>
-<p>Es de notar que el orden de las columnas en <span class="math inline">\(\hat{B}\)</span> es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.</p>
-<p>A pesar de lo anterior, <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> hacen un ordenamiento de acuerdo con el patrón de signo único que indica la dirección de los choques. El siguiente código ordena las columnas de esa misma manera.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B[,<span class="dv">3</span>] <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="dv">3</span>] <span class="sc">*</span> (<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B_SE <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B_SE[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>Lambda <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">diag</span>(usa.cv<span class="sc">$</span>Lambda)[<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)])</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>Lambda_SE <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">diag</span>(usa.cv<span class="sc">$</span>Lambda_SE)[<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)])</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(usa.cv<span class="sc">$</span>B, <span class="dv">3</span>)</span></code></pre></div>
+x_{t}&amp;=B^{*}(L)\epsilon_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
+\end{align}\]</span></p>
+<p>Los resultados muestran la matriz de covarianza estimada <span class="math inline">\(\hat{B^{*}}\)</span>, la matriz de cambio en la convarianza estiamda <span class="math inline">\(\hat{\lambda}\)</span>.</p>
+<p>Es de notar que el orden de las columnas en <span class="math inline">\(\hat{B^{*}}\)</span> es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.</p>
+<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> con base en los resultados de la matriz <span class="math inline">\(\hat{B^{*}}\)</span> hace un ordenamiento de acuerdo con el patrón de los signos. Ello indica que la columna 3 obdece a un shock de demanda, la columna 2 a un shock de oferta y la columna 1 a un shock de política monetaria. El siguiente código ordena las columnas de esa misma manera.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B[,<span class="dv">3</span>] <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B[, <span class="dv">3</span>] <span class="sc">*</span> (<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>B_SE <span class="ot">&lt;-</span> usa.cv<span class="sc">$</span>B_SE[, <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)]</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>Lambda <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">diag</span>(usa.cv<span class="sc">$</span>Lambda)[<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)])</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>usa.cv<span class="sc">$</span>Lambda_SE <span class="ot">&lt;-</span> <span class="fu">diag</span>(<span class="fu">diag</span>(usa.cv<span class="sc">$</span>Lambda_SE)[<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">1</span>)])</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(usa.cv<span class="sc">$</span>B, <span class="dv">3</span>)</span></code></pre></div>
 <pre><code>##     [,1]   [,2]   [,3]
 ## x  0.224 -0.593 -0.612
 ## pi 0.113  1.299 -0.756
 ## i  0.708  0.157  0.029</code></pre>
-<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> interpretan el efecto de la primera columna de la matriz <span class="math inline">\(\hat{B}\)</span> como un shock de demanda. La segunda y tercera columna representan, respectivamente, un shock de oferta y política monetaria.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(usa.cv<span class="sc">$</span>Lambda, <span class="dv">3</span>)</span></code></pre></div>
+<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> interpretan el efecto de la primera columna de la matriz <span class="math inline">\(\hat{B^{*}}\)</span> como un shock de demanda. La segunda y tercera columna representa un shock de oferta y la tercera un shock de política monetaria.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(usa.cv<span class="sc">$</span>Lambda, <span class="dv">3</span>)</span></code></pre></div>
 <pre><code>##       [,1]  [,2]  [,3]
 ## [1,] 1.244 0.000 0.000
 ## [2,] 0.000 0.192 0.000
@@ -1255,16 +1385,16 @@ Los resultados muestran la matriz de covarianza estimada <span class="math inlin
 <p>En cambio la matriz <span class="math inline">\(\hat{\lambda}\)</span> representa la varianza de los shocks estructurales en un segundo regimén, esto es posterior al quiebre estructural. Los autores interpretan a partir de la diagonal de <span class="math inline">\(\hat{\lambda}\)</span> que los shocks de oferta y política monetaria tiene baja varianza en comparación a los shocks de demanda.</p>
 <p>Los autores comparan estos resultados con los obtenidos por <span class="citation"><a href="#ref-Sims80" role="doc-biblioref">Sims</a> (<a href="#ref-Sims80" role="doc-biblioref">1980</a>)</span> utilizando la descomposición de la matriz de covarianza (<span class="math inline">\(\hat{B}\)</span>) como una matriz triangular inferior. La función <em>id.cv()</em> permite
 probar tales restricciones configurando para ello una matriz triangular inferior como se describe en el código siguiente.</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>restMat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">9</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">1</span>, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>restMat</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>restMat <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rep</span>(<span class="cn">NA</span>, <span class="dv">9</span>), <span class="at">ncol =</span> <span class="dv">3</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">1</span>, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>restMat[<span class="dv">2</span>, <span class="dv">3</span>] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>restMat</span></code></pre></div>
 <pre><code>##      [,1] [,2] [,3]
 ## [1,]   NA    0    0
 ## [2,]   NA   NA    0
 ## [3,]   NA   NA   NA</code></pre>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>restricted.model <span class="ot">&lt;-</span> <span class="fu">id.cv</span>(plain.var, <span class="at">SB =</span> <span class="fu">c</span>(<span class="dv">1979</span>, <span class="dv">3</span>),<span class="at">restriction_matrix =</span> restMat)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(restricted.model)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>restricted.model <span class="ot">&lt;-</span> <span class="fu">id.cv</span>(plain.var, <span class="at">SB =</span> <span class="fu">c</span>(<span class="dv">1979</span>, <span class="dv">3</span>),<span class="at">restriction_matrix =</span> restMat)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(restricted.model)</span></code></pre></div>
 <pre><code>## 
 ## Identification Results
 ## ---------------------- 
@@ -1314,17 +1444,18 @@ probar tales restricciones configurando para ello una matriz triangular inferior
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>Si partimos que los shocks structurales fueron identificados con la metodología de cambio en la matriz de covarianza, cualquier restricción impuesta sobre <span class="math inline">\(B\)</span> hace que el modelo esté sobre identificado y ello es posible probarse.</p>
-<p>En resumen el “likelihood ratio test” indica que bajo la <span class="math inline">\(H_{0}\)</span>
-que <span class="math inline">\(B\)</span> la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al <span class="math inline">\(5\%\)</span> de nivel de significancia. <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.</p>
+<p>En resumen el <em>likelihood ratio test</em> indica que bajo la <span class="math inline">\(H_{0}\)</span>
+que <span class="math inline">\(B\)</span> la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al <span class="math inline">\(5\%\)</span> de nivel de significancia.</p>
+<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.</p>
 <p>El siguiente paso es calcular la función impulso respuesta (IFR) con un intervalo de confianza obtenido a partir del método “boostrap.” A partir de la IFR es posible investigar los efectos futuros de los shocks estructurales etiquetados como “económicos” sobre las variables
 incluidas en el modelo. De hecho de acuerdo a <span class="citation"><a href="#ref-Herwartz18" role="doc-biblioref">Herwartz</a> (<a href="#ref-Herwartz18" role="doc-biblioref">2018</a>)</span> aplicar la metodología "boostrap permite evaluar la significancia en los signos que se hacen patentes en la matriz <span class="math inline">\(\hat{B}\)</span>.</p>
 <p>Para aplicar lo anterior, definimos una lista con los signos que representan nuestras restricciones tanto para los shocks de demanda, oferta y política monetaria.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>signrest <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">demand =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">supply =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">monetary_policy =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div>
-<p>Notal que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.</p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">231</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>usa.cv.boot <span class="ot">&lt;-</span> <span class="fu">wild.boot</span>(usa.cv, <span class="at">design =</span> <span class="st">&quot;fixed&quot;</span>,<span class="at">distr =</span> <span class="st">&quot;rademacher&quot;</span>, <span class="at">nboot =</span> <span class="dv">1000</span>, <span class="at">n.ahead =</span> <span class="dv">15</span>,<span class="at">nc =</span> cores, <span class="at">signrest =</span> signrest)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(usa.cv.boot)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>signrest <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">demand =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">supply =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), <span class="at">monetary_policy =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>))</span></code></pre></div>
+<p>Notar que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>() <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">231</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>usa.cv.boot <span class="ot">&lt;-</span> <span class="fu">wild.boot</span>(usa.cv, <span class="at">design =</span> <span class="st">&quot;fixed&quot;</span>,<span class="at">distr =</span> <span class="st">&quot;rademacher&quot;</span>, <span class="at">nboot =</span> <span class="dv">1000</span>, <span class="at">n.ahead =</span> <span class="dv">15</span>,<span class="at">nc =</span> cores, <span class="at">signrest =</span> signrest)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(usa.cv.boot)</span></code></pre></div>
 <pre><code>## 
 ## Bootstrap Results
 ## ----------------- 
@@ -1368,13 +1499,28 @@ incluidas en el modelo. De hecho de acuerdo a <span class="citation"><a href="#r
 ## 
 ## Joint occurrence of specified shocks: 12.7 %</code></pre>
 <p>Enseguida, graficamos para cada variable y shocks su IFR.</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(usa.cv.boot, <span class="at">lowerq =</span> <span class="fl">0.16</span>, <span class="at">upperq =</span> <span class="fl">0.84</span>)</span></code></pre></div>
-<p><img src="01-conceptos_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
-<p>En resumen solamente el 12.7% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
-El signo del patron de shocks monetario esperado aparece en un 28.4%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(usa.cv.boot, <span class="at">lowerq =</span> <span class="fl">0.16</span>, <span class="at">upperq =</span> <span class="fl">0.84</span>)</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta.</p>
+<p>El patrón de signos del shock de política monetaria aparece en solo el 28,4% de todas los experimentos.</p>
+<p>En tanto, la metodología bootstrap indica que el tercer choque está más en línea con el patrón de signos del choque de demanda. Este resultado es plausible observando que la estimación puntual en la esquina inferior derecha es cercana a cero y, por lo tanto, carece de un efecto significativamente positivo sobre la tasa de interés.</p>
+<p>La Figura anterior muestra las funciones de impulso-respuesta de choques normalizados con varianza unitaria en el primer régimen.</p>
+<p><span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> argumentan que la reacción negativa de la tasa de interés a un shock de política monetaria después del período inicial es inverosímil, y pone en duda que este shock se interpreta como uno de política monetaria. Los resultados del bootstrap apoyan la argumentación de los autores con
+con respecto al etiquetado de choque.</p>
+<p>Además, podemos calcular la descomposición de la varianza del error de pronóstico para investigar la contribución de cada perturbación al error cuadrático medio de predicción de las variables. El método <em>fevd()</em>
+crea un objeto para la inspección visual de la descomposición de la varianza del error.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>fev.cv <span class="ot">&lt;-</span> <span class="fu">fevd</span>(usa.cv, <span class="at">n.ahead =</span> <span class="dv">48</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(fev.cv)</span></code></pre></div>
+<p><img src="01-conceptos_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
+error al cuadrado.</p>
+<p>Además, el shock de demanda contribuye casi al 100% del error de pronóstico
+varianza de las tasas de interés.</p>
+<p>Por lo tanto, las descomposiciones del error de pronóstico apuntan a un
+etiquetado de los choques diferente del desarrollado anteriormente sobre la base de patrones de signos de <span class="math inline">\(\hat{B^{*}}\)</span>. Además, confirman la conclusión de <span class="citation"><a href="#ref-Herwartz2016" role="doc-biblioref">Herwartz and Plödt</a> (<a href="#ref-Herwartz2016" role="doc-biblioref">2016</a>)</span> de que el modelo enpirico no logra identificar un shock de política monetaria de acuerdo con sus patrones basados en la teoría económica.</p>
 </div>
-<div id="bla-bla" class="section level2" number="1.8">
-<h2><span class="header-section-number">1.8</span> BLA Bla</h2>
+<div id="bla-bla" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> BLA Bla</h2>
 <p>La estructura del modelo determina el orden de prelación de cada una de las variables y las restricciones de corto plazo.
 El vector está dado por X=[y, <span class="math inline">\(\pi\)</span>, i, NPL, L, e] y se establece un SVAR de la forma <span class="math inline">\(AX=X_{-1}+u\)</span>, en el que A contiene las restricciones y con el cual se identifica los shocks.
 Los datos utilizados tienen la siguiente características:}</p>

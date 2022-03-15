@@ -483,8 +483,11 @@ C(0)&=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
 
 Entonces lo importante es decidir el orden de prelación \emph{De lo exógeno a lo endógeno} de las variables en el VAR; auxiliándose de la teoría económica.
 
-\hypertarget{paquete-en-r}{%
-\section{Paquete en R}\label{paquete-en-r}}
+\hypertarget{paquetes-en-r}{%
+\chapter{Paquetes en R}\label{paquetes-en-r}}
+
+\hypertarget{paquete-svars}{%
+\section{Paquete SVARS}\label{paquete-svars}}
 
 En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R \emph{SVARS} elaborado por \citet{SVAR21}. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados.
 
@@ -496,7 +499,7 @@ En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) s
 \end{Highlighting}
 \end{Shaded}
 
-Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto, la inflación de trimestre a trimestre del deflactor del PIB y una tasa de interés nominal del fondo federal.
+Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto (x), la inflación de trimestre a trimestre del deflactor del PIB (\(\pi\)) y una tasa de interés nominal del fondo federal (i).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -504,6 +507,164 @@ Enseguida se cargará una base de datos en frecuencia trimestral que contiene la
 \NormalTok{usa}\OtherTok{\textless{}{-}}\FunctionTok{as.zoo}\NormalTok{(USA)}
 \end{Highlighting}
 \end{Shaded}
+
+A continuación se aplicará el método de \emph{ortogonalización de Sims} (\citet{Sims80}) el cual consiste en asumir que la matriz \(C(0)\) es una matriz triangular inferior.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{C }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\DecValTok{9}\NormalTok{), }\AttributeTok{ncol =} \DecValTok{3}\NormalTok{)}
+\NormalTok{C[}\DecValTok{1}\NormalTok{, }\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{)] }\OtherTok{\textless{}{-}} \DecValTok{0}
+\NormalTok{C[}\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{] }\OtherTok{\textless{}{-}} \DecValTok{0}
+\NormalTok{C}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      [,1] [,2] [,3]
+## [1,]   NA    0    0
+## [2,]   NA   NA    0
+## [3,]   NA   NA   NA
+\end{verbatim}
+
+Luego estimamos el SVAR con esa restricción
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{plain.var }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(USA, }\AttributeTok{p =} \DecValTok{6}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}const\textquotesingle{}}\NormalTok{)}
+\NormalTok{Sims\_mdl  }\OtherTok{\textless{}{-}} \FunctionTok{SVAR}\NormalTok{(plain.var, }\AttributeTok{estmethod=}\StringTok{"direct"}\NormalTok{, }\AttributeTok{Bmat =}\NormalTok{ C)}
+\FunctionTok{summary}\NormalTok{(Sims\_mdl)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## SVAR Estimation Results:
+## ======================== 
+## 
+## Call:
+## SVAR(x = plain.var, estmethod = "direct", Bmat = C)
+## 
+## Type: B-model 
+## Sample size: 169 
+## Log Likelihood: -722.095 
+## Method: direct 
+## Number of iterations: 501 
+## Convergence code: 1 
+## 
+## Estimated A matrix:
+##    x pi i
+## x  1  0 0
+## pi 0  1 0
+## i  0  0 1
+## 
+## Estimated B matrix:
+##          x     pi     i
+## x   1.0339 0.0000 0.000
+## pi -0.8068 1.0500 0.000
+## i  -1.0568 0.3056 0.936
+## 
+## Covariance matrix of reduced form residuals (*100):
+##          x     pi      i
+## x   106.90 -83.42 -109.3
+## pi  -83.42 175.33  117.3
+## i  -109.26 117.34  208.6
+\end{verbatim}
+
+Y representamos la función impulso respuesta ante un shock en \(\pi\).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Sims.irf }\OtherTok{\textless{}{-}} \FunctionTok{irf}\NormalTok{(Sims\_mdl, }\AttributeTok{impulse =} \StringTok{"pi"}\NormalTok{, }\AttributeTok{response =} \ConstantTok{NULL}\NormalTok{,}
+                \AttributeTok{n.ahead =} \DecValTok{48}\NormalTok{, }\AttributeTok{boot =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{RESULTADO}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(Sims.irf}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{pi)}
+\NormalTok{PERIODO}\OtherTok{\textless{}{-}}\FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{49}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,PERIODO)}
+\DocumentationTok{\#\#\#\#HACER MI PROPIO GRÁFICO\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\FunctionTok{library}\NormalTok{(tidyr)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(ggthemes)}
+\NormalTok{Data\_LONG }\OtherTok{\textless{}{-}} \FunctionTok{gather}\NormalTok{(RESULTADO, }\AttributeTok{key=}\StringTok{"code"}\NormalTok{, }\AttributeTok{value=}\StringTok{"YY"}\NormalTok{,}
+                    \FunctionTok{c}\NormalTok{(}\StringTok{"x"}\NormalTok{, }\StringTok{"pi"}\NormalTok{, }\StringTok{"i"}\NormalTok{))}
+\NormalTok{paleta\_code\_bar}\OtherTok{\textless{}{-}}  \FunctionTok{c}\NormalTok{(}\StringTok{"\#C00000"}\NormalTok{, }\StringTok{"\#E26B0A"}\NormalTok{, }\StringTok{"\#92D050"}\NormalTok{)}
+\NormalTok{P}\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ Data\_LONG, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ PERIODO, }\AttributeTok{y =}\NormalTok{YY , }\AttributeTok{group =}\NormalTok{ code,}
+                                 \AttributeTok{colour=}\NormalTok{code))}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Respuesta (\%)"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Períodos"}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept=}\DecValTok{0}\NormalTok{, }\AttributeTok{linetype=}\StringTok{"dashed"}\NormalTok{,}
+             \AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size=}\DecValTok{1}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size=}\FloatTok{1.5}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values=}\NormalTok{paleta\_code\_bar)}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.right =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{14}\NormalTok{),}
+           \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+           \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.border =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.key=}\FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"white"}\NormalTok{,}
+                                   \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{),}
+           \AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.text  =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{10}\NormalTok{),}
+           \AttributeTok{legend.position=}\FunctionTok{c}\NormalTok{(.}\DecValTok{4}\NormalTok{,.}\DecValTok{85}\NormalTok{),}
+           \AttributeTok{legend.spacing.x =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.10}\NormalTok{, }\StringTok{\textquotesingle{}cm\textquotesingle{}}\NormalTok{),}
+           \AttributeTok{legend.margin=}\FunctionTok{margin}\NormalTok{(),}
+           \AttributeTok{legend.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"transparent"}\NormalTok{,}
+                                            \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{)}\SpecialCharTok{+}\FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{1}\NormalTok{))}
+\NormalTok{P}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+Finalmente, podemos observar la descomposición de la varianza de la variable \(\pi\):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fevd.p }\OtherTok{\textless{}{-}} \FunctionTok{fevd}\NormalTok{(Sims\_mdl, }\AttributeTok{n.ahead =} \DecValTok{48}\NormalTok{)}\SpecialCharTok{$}\NormalTok{p}
+\NormalTok{RESULTADO}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(fevd.p)}
+\NormalTok{PERIODO}\OtherTok{\textless{}{-}}\FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{48}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,PERIODO)}
+\NormalTok{BASE\_LONG }\OtherTok{\textless{}{-}} \FunctionTok{gather}\NormalTok{(RESULTADO, }\AttributeTok{key=}\StringTok{"measure"}\NormalTok{, }\AttributeTok{value=}\StringTok{"value"}\NormalTok{,}
+                    \FunctionTok{c}\NormalTok{(}\StringTok{"x"}\NormalTok{, }\StringTok{"pi"}\NormalTok{, }\StringTok{"i"}\NormalTok{))}
+\NormalTok{paleta}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"\#66C2A5"}\NormalTok{,}\StringTok{"\#8DA0CB"}\NormalTok{, }\StringTok{"\#E78AC3"}\NormalTok{)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\FunctionTok{ggplot}\NormalTok{(BASE\_LONG, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PERIODO, }\AttributeTok{y=}\NormalTok{value, }\AttributeTok{fill=}\NormalTok{measure))}\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{)}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{""}\NormalTok{, }\AttributeTok{x=}\StringTok{""}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =}\NormalTok{ paleta)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Varianza (\%)"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Períodos"}\NormalTok{)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{theme\_classic}\NormalTok{()}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}
+  \AttributeTok{axis.line.x        =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+  \AttributeTok{axis.line.y.left   =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+  \AttributeTok{axis.line.y.right  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+  \AttributeTok{axis.text.x        =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+  \AttributeTok{axis.text.y        =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+  \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{size =} \FloatTok{0.5}\NormalTok{,}
+                                    \AttributeTok{linetype =} \StringTok{\textquotesingle{}solid\textquotesingle{}}\NormalTok{, }\AttributeTok{colour =} \StringTok{"\#EAEAF2"}\NormalTok{),}
+  \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{size =} \FloatTok{0.5}\NormalTok{,}
+                                    \AttributeTok{linetype =} \StringTok{\textquotesingle{}solid\textquotesingle{}}\NormalTok{, }\AttributeTok{colour =} \StringTok{"\#EAEAF2"}\NormalTok{),}
+  \AttributeTok{panel.grid.minor.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{size =} \FloatTok{0.5}\NormalTok{,}
+                                    \AttributeTok{linetype =} \StringTok{\textquotesingle{}solid\textquotesingle{}}\NormalTok{, }\AttributeTok{colour =} \StringTok{"\#EAEAF2"}\NormalTok{),}
+  \AttributeTok{panel.grid.minor.y =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{size =} \FloatTok{0.5}\NormalTok{,}
+                                    \AttributeTok{linetype =} \StringTok{\textquotesingle{}solid\textquotesingle{}}\NormalTok{, }\AttributeTok{colour =} \StringTok{"\#EAEAF2"}\NormalTok{),}
+  \AttributeTok{strip.background.x =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{colour=}\StringTok{"black"}\NormalTok{, }\AttributeTok{fill=}\StringTok{"gray"}\NormalTok{),}
+  \AttributeTok{strip.text.x       =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{20}\NormalTok{, }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold.italic"}\NormalTok{),}
+  \AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{(),}
+  \AttributeTok{legend.text  =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{18}\NormalTok{),}
+  \AttributeTok{legend.position=}\StringTok{"bottom"}\NormalTok{,}
+  \AttributeTok{legend.spacing.x =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.20}\NormalTok{, }\StringTok{\textquotesingle{}cm\textquotesingle{}}\NormalTok{),}
+  \AttributeTok{legend.margin=}\FunctionTok{margin}\NormalTok{(),}
+  \AttributeTok{legend.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"transparent"}\NormalTok{,}
+                                   \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{)}\SpecialCharTok{+}\FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{1}\NormalTok{))}
+\NormalTok{Z}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-6-1.pdf}
 
 A continuación se replicará los resultados obtenidos por \citet{Herwartz2016}, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función \emph{id.cv()} dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -518,15 +679,7 @@ Un primer paso es visualizar cada una de las series.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-3-1.pdf}
-
-Seguidamente se estimara la forma reducida de un VAR, aplicaremos una especificación que incluya intercepto y hasta seis rezagos (p=6)
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{plain.var }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(USA, }\AttributeTok{p =} \DecValTok{6}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}const\textquotesingle{}}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-7-1.pdf}
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función \emph{id.cv()} la cual introduce el \emph{cambio en la varianza} que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento \emph{SB} en formato \emph{ts}:
 
@@ -584,16 +737,17 @@ Con base en el objeto VAR podemos estimar su forma estructural con la función \
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 \end{verbatim}
 
-Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se verá más adelante) de la siguiente forma:
+Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se vió anteriormente) de la siguiente forma:
 
 \begin{align}
-x_{t}&=B(L)\epsilon_{t},\;\;B(0)=I,\;\;E(\epsilon_{t}\epsilon_{t}^{'})=\Sigma 
-\end{align}\\
-Los resultados muestran la matriz de covarianza estimada \(\hat{B}\), la matriz de cambio en la convarianza estiamda \(\hat{\lambda}\).
+x_{t}&=B^{*}(L)\epsilon_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
+\end{align}
 
-Es de notar que el orden de las columnas en \(\hat{B}\) es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.
+Los resultados muestran la matriz de covarianza estimada \(\hat{B^{*}}\), la matriz de cambio en la convarianza estiamda \(\hat{\lambda}\).
 
-A pesar de lo anterior, \citet{Herwartz2016} hacen un ordenamiento de acuerdo con el patrón de signo único que indica la dirección de los choques. El siguiente código ordena las columnas de esa misma manera.
+Es de notar que el orden de las columnas en \(\hat{B^{*}}\) es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.
+
+\citet{Herwartz2016} con base en los resultados de la matriz \(\hat{B^{*}}\) hace un ordenamiento de acuerdo con el patrón de los signos. Ello indica que la columna 3 obdece a un shock de demanda, la columna 2 a un shock de oferta y la columna 1 a un shock de política monetaria. El siguiente código ordena las columnas de esa misma manera.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -613,7 +767,7 @@ A pesar de lo anterior, \citet{Herwartz2016} hacen un ordenamiento de acuerdo co
 ## i  0.708  0.157  0.029
 \end{verbatim}
 
-\citet{Herwartz2016} interpretan el efecto de la primera columna de la matriz \(\hat{B}\) como un shock de demanda. La segunda y tercera columna representan, respectivamente, un shock de oferta y política monetaria.
+\citet{Herwartz2016} interpretan el efecto de la primera columna de la matriz \(\hat{B^{*}}\) como un shock de demanda. La segunda y tercera columna representa un shock de oferta y la tercera un shock de política monetaria.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -709,8 +863,10 @@ probar tales restricciones configurando para ello una matriz triangular inferior
 
 Si partimos que los shocks structurales fueron identificados con la metodología de cambio en la matriz de covarianza, cualquier restricción impuesta sobre \(B\) hace que el modelo esté sobre identificado y ello es posible probarse.
 
-En resumen el ``likelihood ratio test'' indica que bajo la \(H_{0}\)
-que \(B\) la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al \(5\%\) de nivel de significancia. \citet{Herwartz2016} argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.
+En resumen el \emph{likelihood ratio test} indica que bajo la \(H_{0}\)
+que \(B\) la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al \(5\%\) de nivel de significancia.
+
+\citet{Herwartz2016} argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.
 
 El siguiente paso es calcular la función impulso respuesta (IFR) con un intervalo de confianza obtenido a partir del método ``boostrap''. A partir de la IFR es posible investigar los efectos futuros de los shocks estructurales etiquetados como ``económicos'' sobre las variables
 incluidas en el modelo. De hecho de acuerdo a \citet{Herwartz18} aplicar la metodología "boostrap permite evaluar la significancia en los signos que se hacen patentes en la matriz \(\hat{B}\).
@@ -723,7 +879,7 @@ Para aplicar lo anterior, definimos una lista con los signos que representan nue
 \end{Highlighting}
 \end{Shaded}
 
-Notal que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.
+Notar que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -787,10 +943,39 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-12-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-15-1.pdf}
 
-En resumen solamente el 12.7\% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
-El signo del patron de shocks monetario esperado aparece en un 28.4\%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.
+El resumen el resultado revela que solo el 12.7\% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta.
+
+El patrón de signos del shock de política monetaria aparece en solo el 28,4\% de todas los experimentos.
+
+En tanto, la metodología bootstrap indica que el tercer choque está más en línea con el patrón de signos del choque de demanda. Este resultado es plausible observando que la estimación puntual en la esquina inferior derecha es cercana a cero y, por lo tanto, carece de un efecto significativamente positivo sobre la tasa de interés.
+
+La Figura anterior muestra las funciones de impulso-respuesta de choques normalizados con varianza unitaria en el primer régimen.
+
+\citet{Herwartz2016} argumentan que la reacción negativa de la tasa de interés a un shock de política monetaria después del período inicial es inverosímil, y pone en duda que este shock se interpreta como uno de política monetaria. Los resultados del bootstrap apoyan la argumentación de los autores con
+con respecto al etiquetado de choque.
+
+Además, podemos calcular la descomposición de la varianza del error de pronóstico para investigar la contribución de cada perturbación al error cuadrático medio de predicción de las variables. El método \emph{fevd()}
+crea un objeto para la inspección visual de la descomposición de la varianza del error.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fev.cv }\OtherTok{\textless{}{-}} \FunctionTok{fevd}\NormalTok{(usa.cv, }\AttributeTok{n.ahead =} \DecValTok{48}\NormalTok{)}
+\FunctionTok{plot}\NormalTok{(fev.cv)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50\% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5\% de la media de predicción
+error al cuadrado.
+
+Además, el shock de demanda contribuye casi al 100\% del error de pronóstico
+varianza de las tasas de interés.
+
+Por lo tanto, las descomposiciones del error de pronóstico apuntan a un
+etiquetado de los choques diferente del desarrollado anteriormente sobre la base de patrones de signos de \(\hat{B^{*}}\). Además, confirman la conclusión de \citet{Herwartz2016} de que el modelo enpirico no logra identificar un shock de política monetaria de acuerdo con sus patrones basados en la teoría económica.
 
 \hypertarget{bla-bla}{%
 \section{BLA Bla}\label{bla-bla}}

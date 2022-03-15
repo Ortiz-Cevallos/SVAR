@@ -362,7 +362,9 @@ C(0)&=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
 Entonces lo importante es decidir el orden de prelación *De lo exógeno a lo endógeno* de las variables en el VAR; auxiliándose de la teoría económica.
 
 
-## Paquete en R
+# Paquetes en R
+
+## Paquete SVARS
 
 En esta nota para la obtención de un Vector Autorregresivo Estructural (SVAR) se utilizará el paquete en R *SVARS* elaborado por @SVAR21. A continuación se muestra la carga de este paquete junto a otros que serán de utilidad cuando se analicen los resultados. 
 
@@ -373,12 +375,166 @@ library("svars")
 library("ggplot2")
 ```
 
-Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto, la inflación de trimestre a trimestre del deflactor del PIB y una tasa de interés nominal del fondo federal.
+Enseguida se cargará una base de datos en frecuencia trimestral que contiene la brecha producto (x), la inflación de trimestre a trimestre del deflactor del PIB ($\pi$) y una tasa de interés nominal del fondo federal (i).
+
 
 ```r
 data("USA")
 usa<-as.zoo(USA)
 ```
+
+A continuación se aplicará el método de *ortogonalización de Sims* (@Sims80) el cual consiste en asumir que la matriz $C(0)$ es una matriz triangular inferior.
+
+
+```r
+C <- matrix(rep(NA, 9), ncol = 3)
+C[1, c(2, 3)] <- 0
+C[2, 3] <- 0
+C
+```
+
+```
+##      [,1] [,2] [,3]
+## [1,]   NA    0    0
+## [2,]   NA   NA    0
+## [3,]   NA   NA   NA
+```
+
+Luego estimamos el SVAR con esa restricción 
+
+```r
+plain.var <- vars::VAR(USA, p = 6, type = 'const')
+Sims_mdl  <- SVAR(plain.var, estmethod="direct", Bmat = C)
+summary(Sims_mdl)
+```
+
+```
+## 
+## SVAR Estimation Results:
+## ======================== 
+## 
+## Call:
+## SVAR(x = plain.var, estmethod = "direct", Bmat = C)
+## 
+## Type: B-model 
+## Sample size: 169 
+## Log Likelihood: -722.095 
+## Method: direct 
+## Number of iterations: 501 
+## Convergence code: 1 
+## 
+## Estimated A matrix:
+##    x pi i
+## x  1  0 0
+## pi 0  1 0
+## i  0  0 1
+## 
+## Estimated B matrix:
+##          x     pi     i
+## x   1.0339 0.0000 0.000
+## pi -0.8068 1.0500 0.000
+## i  -1.0568 0.3056 0.936
+## 
+## Covariance matrix of reduced form residuals (*100):
+##          x     pi      i
+## x   106.90 -83.42 -109.3
+## pi  -83.42 175.33  117.3
+## i  -109.26 117.34  208.6
+```
+
+Y representamos la función impulso respuesta ante un shock en $\pi$.
+
+
+```r
+Sims.irf <- irf(Sims_mdl, impulse = "pi", response = NULL,
+                n.ahead = 48, boot = TRUE)
+RESULTADO<-as.data.frame(Sims.irf$irf$pi)
+PERIODO<-seq(1,49,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+####HACER MI PROPIO GRÁFICO###################
+library(tidyr)
+library(dplyr)
+library(ggthemes)
+Data_LONG <- gather(RESULTADO, key="code", value="YY",
+                    c("x", "pi", "i"))
+paleta_code_bar<-  c("#C00000", "#E26B0A", "#92D050")
+P<- ggplot(data = Data_LONG, aes(x = PERIODO, y =YY , group = code,
+                                 colour=code))
+P<-P+labs(y="Respuesta (%)",
+          x="Períodos")+
+  geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)+
+  geom_line(size=1.5)+
+  scale_color_manual(values=paleta_code_bar)
+P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12),
+           panel.grid.minor = element_blank(),
+           panel.grid.major.y = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           legend.key=element_rect(fill = "white", colour = "white",
+                                   color = "white", inherit.blank = FALSE),
+           legend.title = element_blank(),
+           legend.text  = element_text(size=10),
+           legend.position=c(.4,.85),
+           legend.spacing.x = unit(0.10, 'cm'),
+           legend.margin=margin(),
+           legend.background = element_rect(fill = "white", colour = "transparent",
+                                            color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+P
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-5-1.png)<!-- -->
+
+Finalmente, podemos observar la descomposición de la varianza de la variable $\pi$:
+
+
+```r
+fevd.p <- fevd(Sims_mdl, n.ahead = 48)$p
+RESULTADO<-as.data.frame(fevd.p)
+PERIODO<-seq(1,48,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",
+                    c("x", "pi", "i"))
+paleta<-c("#66C2A5","#8DA0CB", "#E78AC3")
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, fill=measure))+
+  geom_bar(stat='identity')+labs(y="", x="")+
+  scale_fill_manual(values = paleta)
+Z<-Z+labs(y="Varianza (%)",
+          x="Períodos")
+Z<-Z+theme_classic()+theme(
+  axis.line.x        = element_line(colour = "black", size = 0.5),
+  axis.line.y.left   = element_line(colour = "black", size = 0.5),
+  axis.line.y.right  = element_line(colour = "black", size = 0.5),
+  axis.text.x        = element_text( color = "black", size = 12),
+  axis.text.y        = element_text( color = "black", size = 12),
+  panel.grid.major.y = element_line(size = 0.5,
+                                    linetype = 'solid', colour = "#EAEAF2"),
+  panel.grid.major.x = element_line(size = 0.5,
+                                    linetype = 'solid', colour = "#EAEAF2"),
+  panel.grid.minor.x = element_line(size = 0.5,
+                                    linetype = 'solid', colour = "#EAEAF2"),
+  panel.grid.minor.y = element_line(size = 0.5,
+                                    linetype = 'solid', colour = "#EAEAF2"),
+  strip.background.x = element_rect(colour="black", fill="gray"),
+  strip.text.x       = element_text(size = 20, color = "black", face = "bold.italic"),
+  legend.title = element_blank(),
+  legend.text  = element_text(size=18),
+  legend.position="bottom",
+  legend.spacing.x = unit(0.20, 'cm'),
+  legend.margin=margin(),
+  legend.background = element_rect(fill = "white", colour = "transparent",
+                                   color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+Z
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-6-1.png)<!-- -->
 
 A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -391,15 +547,10 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-3-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-7-1.png)<!-- -->
 
-Seguidamente se estimara la forma reducida de un VAR, aplicaremos una especificación que incluya intercepto y hasta seis rezagos (p=6)
-
-
-```r
-plain.var <- vars::VAR(USA, p = 6, type = 'const')
-```
 Con base en el objeto VAR podemos estimar su forma estructural con la función *id.cv()* la cual introduce el *cambio en la varianza* que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento *SB* en formato *ts*:
+
 
 ```r
 usa.cv <- id.cv(plain.var, SB = c(1979, 3))
@@ -452,16 +603,17 @@ summary(usa.cv)
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
-Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se verá más adelante) de la siguiente forma:
+Si el VAR puede ser escrito con matrices y como un sistema de media móviles (como se vió anteriormente) de la siguiente forma:
 
 \begin{align}
-x_{t}&=B(L)\epsilon_{t},\;\;B(0)=I,\;\;E(\epsilon_{t}\epsilon_{t}^{'})=\Sigma 
+x_{t}&=B^{*}(L)\epsilon_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
 \end{align}   
-Los resultados muestran la matriz de covarianza estimada $\hat{B}$, la matriz de cambio en la convarianza estiamda $\hat{\lambda}$.
 
-Es de notar que el orden de las columnas en  $\hat{B}$ es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.
+Los resultados muestran la matriz de covarianza estimada $\hat{B^{*}}$, la matriz de cambio en la convarianza estiamda $\hat{\lambda}$.
 
-A pesar de lo anterior, @Herwartz2016 hacen un ordenamiento de acuerdo con el patrón de signo único que indica la dirección de los choques. El siguiente código ordena las columnas de esa misma manera. 
+Es de notar que el orden de las columnas en  $\hat{B^{*}}$ es arbitrario. Lo importante es que ese ordenamiento se haga teniendo un sentido económico.
+
+@Herwartz2016 con base en los resultados de la matriz $\hat{B^{*}}$ hace un ordenamiento de acuerdo con el patrón de los signos. Ello indica que la columna 3 obdece a un shock de demanda, la columna 2 a un shock de oferta y la columna 1 a un shock de política monetaria. El siguiente código ordena las columnas de esa misma manera. 
 
 ```r
 usa.cv$B <- usa.cv$B[, c(3, 2, 1)]
@@ -479,7 +631,7 @@ round(usa.cv$B, 3)
 ## i  0.708  0.157  0.029
 ```
 
-@Herwartz2016 interpretan el efecto de la primera columna de la matriz $\hat{B}$ como un shock de demanda. La segunda y tercera columna representan, respectivamente, un shock de oferta y política monetaria.
+@Herwartz2016 interpretan el efecto de la primera columna de la matriz $\hat{B^{*}}$ como un shock de demanda. La segunda y tercera columna representa un shock de oferta y la tercera un shock de política monetaria.
 
 
 ```r
@@ -569,8 +721,10 @@ summary(restricted.model)
 
 Si partimos que los shocks structurales fueron identificados con la metodología de cambio en la matriz de covarianza, cualquier restricción impuesta sobre $B$ hace que el modelo esté sobre identificado y ello es posible probarse.
 
-En resumen el "likelihood ratio test" indica que bajo la $H_{0}$
-que $B$ la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al $5\%$ de nivel de significancia. @Herwartz2016 argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.
+En resumen el *likelihood ratio test* indica que bajo la $H_{0}$
+que $B$ la matriz triangular (baja la cual impactan los shocks structurales) es rechazada al $5\%$ de nivel de significancia. 
+
+@Herwartz2016 argumentan que la identificación de valores iguales a cero para lograr una matriz trinagular inferior es algo contra intuitivo desde el punto de vista económico; por tanto un modelo sin restricciones debería ser preferido.
 
 El siguiente paso es calcular la función impulso respuesta (IFR) con un intervalo de confianza obtenido a partir del método "boostrap". A partir de la IFR es posible investigar los efectos futuros de los shocks estructurales etiquetados como "económicos" sobre las variables
 incluidas en el modelo. De hecho de acuerdo a @Herwartz18 aplicar la metodología "boostrap permite evaluar la significancia en los signos que se hacen patentes en la matriz $\hat{B}$.
@@ -582,7 +736,7 @@ Para aplicar lo anterior, definimos una lista con los signos que representan nue
 signrest <- list(demand = c(1, 1, 1), supply = c(-1, 1, 1), monetary_policy = c(-1, -1, 1))
 ```
 
-Notal que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.
+Notar que el horizonte de tiempo para el IFR tiene que ser determinado de antemano usando el argumento n.ahead.
 
 
 ```r
@@ -644,10 +798,38 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-12-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-15-1.png)<!-- -->
 
-En resumen solamente el 12.7% de todos los bootstrap estimados están en línea con el patron de signos económicamente sensatos.
-El signo del patron de shocks monetario esperado aparece en un 28.4%. Finalmente, el bootstrap muestra que el tercer shock va más en línea con el patrón asociado a un shock de demanda.
+El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta. 
+
+El patrón de signos del shock de política monetaria aparece en solo el 28,4% de todas los experimentos. 
+
+En tanto, la metodología bootstrap indica que el tercer choque está más en línea con el patrón de signos del choque de demanda. Este resultado es plausible observando que la estimación puntual en la esquina inferior derecha es cercana a cero y, por lo tanto, carece de un efecto significativamente positivo sobre la tasa de interés. 
+
+La Figura anterior muestra las funciones de impulso-respuesta de choques normalizados con varianza unitaria en el primer régimen.
+
+@Herwartz2016 argumentan que la reacción negativa de la tasa de interés a un shock de política monetaria después del período inicial es inverosímil, y pone en duda que este shock se interpreta como uno de política monetaria. Los resultados del bootstrap apoyan la argumentación de los autores con
+con respecto al etiquetado de choque.
+
+Además, podemos calcular la descomposición de la varianza del error de pronóstico para investigar la contribución de cada perturbación al error cuadrático medio de predicción de las variables. El método *fevd()*
+crea un objeto para la inspección visual de la descomposición de la varianza del error.
+
+
+```r
+fev.cv <- fevd(usa.cv, n.ahead = 48)
+plot(fev.cv)
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-16-1.png)<!-- -->
+
+De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
+error al cuadrado.
+
+Además, el shock de demanda contribuye casi al 100% del error de pronóstico
+varianza de las tasas de interés.
+
+Por lo tanto, las descomposiciones del error de pronóstico apuntan a un
+etiquetado de los choques diferente del desarrollado anteriormente sobre la base de patrones de signos de $\hat{B^{*}}$. Además, confirman la conclusión de @Herwartz2016 de que el modelo enpirico no logra identificar un shock de política monetaria de acuerdo con sus patrones basados en la teoría económica.
 
 
 ## BLA Bla
