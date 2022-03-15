@@ -287,22 +287,22 @@ Expresándolo de forma matricial tenermos:
 
 \begin{equation}
 \label{e1}
-x_t = A^{*}x_{t−1} + Cw_t
+x_t = \Gamma x_{t−1} + Zw_t
 \end{equation}
 
 La ecuación anterior es la \emph{forma estructural}. Sin embargo, cuando se estima el VAR se hace en su \emph{forma reducida}, la que resulta trás premultiplicar por la matriz A:
 \begin{equation}
 \label{e2}
-Ax_t = AA^{*}x_{t−1} + Bw_t
+Ax_t = A\Gamma x_{t−1} + Bw_t
 \end{equation}
 
-Si asumimos que los \emph{errores estructurales} que integran el vector \(w_{t}\) son ruido blanco, y que los coeficientes en la matriz \(A^{*}\) son \emph{estructurales} los cuales difieran de sus contrapartes en su forma reducida.
+Si asumimos que los \emph{errores estructurales} que integran el vector \(w_{t}\) son ruido blanco, y que los coeficientes en la matriz \(\Gamma\) son \emph{estructurales} los cuales difieran de sus contrapartes en su forma reducida.
 
 Para ver lo anterior, multiplicamos la ecuación anterior por \(A^{-1}\):
 
 \begin{align}
-x_t &= A^{-1}AA^{*}x_{t−1} + A^{-1}Bw_t\\
-x_t &= A^{*}x_{t−1} + \eta_t
+x_t &= A^{-1}A\Gammax_{t−1} + A^{-1}Bw_t\\
+x_t &= \Gamma x_{t−1} + \eta_t
 \end{align}
 
 Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B.
@@ -310,10 +310,10 @@ Un modelo SVAR puede ser usado para identificar los shocks y trazar su función 
 Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida:
 
 \begin{equation}
-Ax_t = AA^{*}x_{t−1} + Bw_t
+Ax_t = A\Gamma x_{t−1} + Bw_t
 \end{equation}
 
-Y solo se pueden agregar restricciones para A y B. Además los residuos en su forma reducida se puede recuperar de un modelo SVAR por \(\eta_t=A^{-1}Bw_t=Qw_t\) y su matriz de varianza-covarianza es \(\Sigma_\eta=A^{-1}BB^{\tau}(A^{-1})^{\tau}\).
+Donde solo se pueden agregar restricciones para A y B. Además los residuos en su forma reducida se puede recuperar de un modelo SVAR por \(\eta_t=A^{-1}Bw_t=Qw_t\) y su matriz de varianza-covarianza es \(\Sigma_\eta=A^{-1}B\Sigma_{w}B^{\tau}(A^{-1})^{\tau}=Q\Sigma_{w}Q^{\tau}=QQ^{\tau}\).
 
 De manera que el impulso respuesta de este modelo ante un shock estrutural en (\(w_t\)) viene dado por:
 
@@ -340,9 +340,9 @@ Sabemos que podemos representar cualquier serie de tiempo como una \emph{arbitra
 
 Entonces la \emph{Ortogonalización} se refiere al proceso de seleccionar uno de las posibles funciones de impulsos respuestas que sea más interesante para el análisis económico.
 
-Si definimos la matriz A en función del operador de rezagos:
+Si definimos la matriz \(A^{*}\) en función del operador de rezagos:
 \begin{equation}
-A=\left( \begin{array}{cccc}
+A^{*}=\left( \begin{array}{cccc}
 L      & NA  & \cdots & NA\\
 \beta_{1,2} & L   &        & NA\\
 \vdots &     & \ddots & NA\\
@@ -354,12 +354,12 @@ L      & NA  & \cdots & NA\\
 Un VAR expresado en notación vectorial estaría dado:
 
 \begin{align}
-A(L)x_{t}&=w_{t},\;\;A(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
+A^{*}(L)x_{t}&=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
 \end{align}
 
-Si definimos la matriz D en función de sus rezagos:
+Si definimos la matriz B en función de sus rezagos:
 \begin{equation}
-D=\left( \begin{array}{cccc}
+B=\left( \begin{array}{cccc}
 L      & NA  & \cdots & NA\\
 \Phi_{1,2} & L   &        & NA\\
 \vdots &     & \ddots & NA\\
@@ -374,7 +374,7 @@ En notación MA se escribe:
 x_{t}&=B(L)w_{t},\;\;B(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
 \end{align}
 
-Donde \(B(L)=A(L)^{-1}\), siendo \(B(L)\) la respuesta de \(x_{t}\) a una unidad de impulso de cada elemento de \(e_{t}\)
+Donde \(B(L)=A^{*}(L)^{-1}\), siendo \(B(L)\) la respuesta de \(x_{t}\) a una unidad de impulso de cada elemento de \(e_{t}\)
 
 Ahora supongase que queremos calcular la respuesta de \(x_{t}\) a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de \(x_{t}\) de un schocks tal que: \(\eta_{1t}=e_{\pi t}\) y \(\eta_{2t}=5e_{\pi t}+e_{mt}\) ó:
 \begin{equation}

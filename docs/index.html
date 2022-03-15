@@ -24,7 +24,7 @@
 <meta name="author" content="Luis Ortiz-Cevallos" />
 
 
-<meta name="date" content="2022-03-10" />
+<meta name="date" content="2022-03-14" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -899,7 +899,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="header">
 <h1 class="title">VECTORES AUTOREGRESIVOS (VAR)</h1>
 <p class="author"><em><a href="https://ortiz-cevallos.github.io/MYSELF/">Luis Ortiz-Cevallos</a></em></p>
-<p class="date"><em>2022-03-10</em></p>
+<p class="date"><em>2022-03-14</em></p>
 </div>
 <div id="introducción" class="section level1" number="1">
 <h1><span class="header-section-number">Capítulo 1</span> INTRODUCCIÓN</h1>
@@ -963,58 +963,87 @@ u_{t} \\
 </ol>
 <p>Noten que los pronósticos para horizontes <span class="math inline">\(h\geq1\)</span> de un proceso VAR(p) puede ser generado de manera recursiva.
 <span class="math inline">\(x_{t+h/t} = A_{1}x_{t+h-1/t} + \cdots+A_{p}x_{t+h-p/t}\)</span></p>
-<p>Entonces la matriz de covarinazas del error de pronósito está dado por:</p>
-<p><span class="math display">\[\begin{equation}
-\left( \begin{array}{c}
-Y_{t+1}-Y_{t+1/t} \\
-\vdots \\
-Y_{t+h}-Y_{t+h/t}
-\end{array}
-\right)
-\left( \begin{array}{c}
-Y_{t+1}-Y_{t+1/t} \\
-\vdots \\
-Y_{t+h}-Y_{t+h/t}
-\end{array}
-\right)^{\tau}
-=\left( \begin{array}{cccc}
-I      &amp; 0  &amp; \cdots &amp; 0\\
-\Phi_1 &amp; I  &amp;        &amp; 0\\
-\vdots &amp;    &amp; \ddots &amp; 0\\
-\Phi_{h-1} &amp; \Phi_{h-1}   &amp; \cdots &amp; I\\
-\end{array}
-\right) \left(\Sigma_{w}\otimes I_{h}\right)\left( \begin{array}{cccc}
-I      &amp; 0  &amp; \cdots &amp; 0\\
-\Phi_1 &amp; I  &amp;        &amp; 0\\
-\vdots &amp;    &amp; \ddots &amp; 0\\
-\Phi_{h-1} &amp; \Phi_{h-1}   &amp; \cdots &amp; I\\
-\end{array}
-\right)^{\tau}
-\nonumber
-\end{equation}\]</span></p>
-<p>Sí suponemos que h=10, k=4, el lado izquierdo de la ecuación es una matriz 40X40. La primera matriz del lado derecho es de dimensión 40X40 dado que w es de dimensión 4x4 pues hay 4 regresores, el resultado del segundo componente del lado derecho es una matriz 40x40, finalmente el último término también es una matriz 40x40.</p>
-<p>Por otro lado, al haber 4 regresores, <span class="math inline">\(x_{t}\)</span> es un vector de dimensión 12, A es una matriz de dimensión 12x12 mientras C y w son dos vectores de dimensión 12.</p>
 </div>
 <div id="vectores-autoregresivos-estructurales" class="section level2" number="1.3">
 <h2><span class="header-section-number">1.3</span> Vectores autoregresivos estructurales</h2>
-<p>Expresándolo como un VAR(1) de forma matricial tenermos:</p>
+<p>Casi todas las variables en economía podrían considerarse
+hasta cierto punto endógenas. Sin embargo, prima un criterio de relevancia. Si bien es cierto que un comerciante al fijar el precio de una manzana está afectando la inflación, parece razonable suponer que la inflación es exógena al precio de las manzanas de este comerciante.</p>
+<p>Por tanto si la inflación está dado por <span class="math inline">\(\pi\)</span> y el precio de las manzanas por <span class="math inline">\(m\)</span> tenemos el siguiente VAR</p>
+<p><span class="math display">\[\begin{align}
+\alpha_{1,1}^{+}\pi_t+\alpha_{1,2}^{+}m_t &amp;= \beta_{1,1}^{+}\pi_{t-1}+\beta_{1,2}^{+}m_{t-1}+e_{\pi,t}\\
+\alpha_{2,1}^{+}\pi_t+\alpha_{2,2}^{+}m_t &amp;= \beta_{2,1}^{+}\pi_{t-1}+\beta_{2,2}^{+}m_{t-1}+e_{m,t}
+\end{align}\]</span></p>
+<p>Sí normalizamos el VAR tenemos lo siguiente:
+<span class="math display">\[\begin{align}
+\pi_t+\alpha_{1,2}m_t &amp;= \beta_{1,1}\pi_{t-1}+\beta_{1,2}m_{t-1}+e_{\pi,t}\\
+\alpha_{2,1}\pi_t+m_t &amp;= \beta_{2,1}\pi_{t-1}+\beta_{2,2}m_{t-1}+e_{m,t}
+\end{align}\]</span></p>
+<p>Si resolvemos el sistema de ecuaciones simultáneas, despejamos las
+variables obtenemos un VAR en su forma reducida; comenzamos con la primera ecuación:</p>
+<p><span class="math display">\[\begin{align}
+\pi_{t} &amp;=\beta_{1,1}\pi_{t-1}+\beta_{1,2}m_{t-1}+e_{\pi,t}\\
+        &amp;- \alpha_{1,2}(\beta_{2,1}\pi_{t-1}+\beta_{2,2}m_{t-1}-\alpha_{2,1}\pi_t+e_{m,t})\\
+        \pi_{t} &amp;=\frac{(\beta_{1,1}-\alpha_{1,2}\beta_{2,1})}{(1+\alpha_{1,2}\alpha_{2,1})}\pi_{t-1}+ \frac{(\beta_{1,2}-\alpha_{1,2}\beta_{2,2})}{(1+\alpha_{1,2}\alpha_{2,1})}m_{t-1}+\frac{1}{(1+\alpha_{1,2}\alpha_{2,1})}e_{\pi,t}- \frac{\alpha_{1,2}}{(1+\alpha_{1,2}\alpha_{2,1})}e_{m,t}\\
+ \pi_{t}&amp;=\gamma_{\pi}\pi_{t-1}+\gamma_{m}m_{t-1}+\gamma_{e_{\pi}}e_{\pi,t}+\gamma_{e_{m}}e_{m,t}       
+\end{align}\]</span></p>
+<p>De manera análoga para las manzanas:
+<span class="math display">\[\begin{align}
+m_{t} &amp;=\beta_{2,1}\pi_{t-1}+\beta_{2,2}m_{t-1}+e_{m,t}\\
+        &amp;- \alpha_{2,1}(\beta_{1,1}\pi_{t-1}+\beta_{1,2}m_{t-1}-\alpha_{1,2}m_t+e_{\pi,t})\\
+        m_{t} &amp;=\frac{(\beta_{2,1}-\alpha_{2,1}\beta_{1,1})}{(1+\alpha_{1,2}\alpha_{2,1})}\pi_{t-1}+ \frac{(\beta_{2,2}-\alpha_{2,1}\beta_{1,2})}{(1+\alpha_{1,2}\alpha_{2,1})}m_{t-1}+\frac{\alpha_{2,1}}{(1+\alpha_{1,2}\alpha_{2,1})}e_{\pi,t}- \frac{1}{(1+\alpha_{1,2}\alpha_{2,1})}e_{m,t}\\
+ m_{t}&amp;=\omega_{\pi}\pi_{t-1}+\omega_{m}m_{t-1}+\omega_{e_{\pi}}e_{\pi,t}+\omega_{e_{m}}e_{m,t}       
+\end{align}\]</span></p>
+<p>Entonces ahora tenemos el siguiente sistema:
+<span class="math display">\[\begin{align}
+\pi_{t}&amp;=\gamma_{\pi}\pi_{t-1}+\gamma_{m}m_{t-1}+\gamma_{e_{\pi}}e_{\pi,t}+\gamma_{e_{m}}e_{m,t}\\   
+ m_{t}&amp;=\omega_{\pi}\pi_{t-1}+\omega_{m}m_{t-1}+\omega_{e_{\pi}}e_{\pi,t}+\omega_{e_{m}}e_{m,t}       
+\end{align}\]</span></p>
+<p>El sistema anterior puede escribirse de forma matricial como:
+<span class="math display">\[\begin{equation}
+    \left( \begin{array}{c}
+    \pi_{t} \\
+      m_{t} 
+    \end{array}\right)=\left( \begin{array}{cc}
+ \gamma_{\pi} &amp; \gamma_{m}\\
+ \omega_{\pi} &amp; \omega_{m}
+    \end{array}
+    \right) \left( \begin{array}{c}
+    \pi_{t-1}\\
+      m_{t-1}
+    \end{array}
+    \right) +
+\left( \begin{array}{cc}
+ \gamma_{e_{\pi}} &amp; \gamma_{e_{m}}\\
+ \omega_{e_{\pi}} &amp; \omega_{e_{m}}
+    \end{array}
+    \right) \left( \begin{array}{c}
+    e_{\pi,t}\\
+    e_{m,t} 
+    \end{array}
+    \right) 
+\end{equation}\]</span></p>
+<p>Expresándolo de forma matricial tenermos:</p>
 <p><span class="math display">\[\begin{equation}
 \label{e1}
-x_t = Ax_{t−1} + Cw_t
+x_t = \Gamma x_{t−1} + Zw_t
 \end{equation}\]</span></p>
-<p>Cuando la ecuación  se expresa como en  se conoce como su <em>forma reducida</em>
+<p>La ecuación anterior es la <em>forma estructural</em>. Sin embargo, cuando se estima el VAR se hace en su <em>forma reducida</em>, la que resulta trás premultiplicar por la matriz A:
 <span class="math display">\[\begin{equation}
 \label{e2}
-Ax_t = A^{*}x_{t−1} + Bw_t
+Ax_t = A\Gamma x_{t−1} + Bw_t
 \end{equation}\]</span></p>
-<p>Si asumimos que los <em>errores estructurales</em> que integran el vector <span class="math inline">\(w_{t}\)</span> es decir <span class="math inline">\(\epsilon_{t}\)</span> son ruido blanco, y que los coeficientes en la matriz <span class="math inline">\(A^{*}\)</span> son <em>estructurales</em> los cuales difieran de sus contrapartes en su forma reducida.</p>
-<p>Para ver lo anterior, multiplicamos la ecuación  por <span class="math inline">\(A^{-1}\)</span>:</p>
+<p>Si asumimos que los <em>errores estructurales</em> que integran el vector <span class="math inline">\(w_{t}\)</span> son ruido blanco, y que los coeficientes en la matriz <span class="math inline">\(\Gamma\)</span> son <em>estructurales</em> los cuales difieran de sus contrapartes en su forma reducida.</p>
+<p>Para ver lo anterior, multiplicamos la ecuación anterior por <span class="math inline">\(A^{-1}\)</span>:</p>
 <p><span class="math display">\[\begin{align}
-x_t &amp;= A^{-1}A^{*}x_{t−1} + A^{-1}Bw_t\\
-x_t &amp;= Ax_{t−1} + \eta_t
+x_t &amp;= A^{-1}A\Gammax_{t−1} + A^{-1}Bw_t\\
+x_t &amp;= \Gamma x_{t−1} + \eta_t
 \end{align}\]</span></p>
 <p>Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B.</p>
-<p>Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida y solo se pueden agregar restricciones para A y B. Además los residuos en su forma reducida se puede recuperar de un modelo SVAR por <span class="math inline">\(\eta_t=A^{-1}Bw_t\)</span> y su matriz de varianza-covarianza es <span class="math inline">\(\Sigma_\eta=A^{-1}BB^{\tau}(A^{-1})^{\tau}\)</span>.</p>
+<p>Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida:</p>
+<p><span class="math display">\[\begin{equation}
+Ax_t = A\Gamma x_{t−1} + Bw_t
+\end{equation}\]</span></p>
+<p>Donde solo se pueden agregar restricciones para A y B. Además los residuos en su forma reducida se puede recuperar de un modelo SVAR por <span class="math inline">\(\eta_t=A^{-1}Bw_t=Qw_t\)</span> y su matriz de varianza-covarianza es <span class="math inline">\(\Sigma_\eta=A^{-1}B\Sigma_{w}B^{\tau}(A^{-1})^{\tau}=Q\Sigma_{w}Q^{\tau}=QQ^{\tau}\)</span>.</p>
 <p>De manera que el impulso respuesta de este modelo ante un shock estrutural en (<span class="math inline">\(w_t\)</span>) viene dado por:</p>
 <p><span class="math inline">\(\begin{array}{ccccccccc} w_{t} &amp;\colon &amp;0&amp;0&amp;I&amp;0&amp;0&amp;0&amp;0 \\ x_{t} &amp;\colon &amp;0&amp;0&amp;A^{-1}B&amp;B&amp;AB&amp;A^{2}B&amp;\cdots \end{array}\)</span></p>
 <p>Es posible distinguir tres tipos de SVAR según se impongan las restricciones:</p>
@@ -1029,9 +1058,9 @@ x_t &amp;= Ax_{t−1} + \eta_t
 <p>La función impulso respuesta de un VAR es ligeramente ambigua.</p>
 <p>Sabemos que podemos representar cualquier serie de tiempo como una <em>arbitraria</em> combinación lineal de un conjunto de funciones de impulso respuestas.</p>
 <p>Entonces la <em>Ortogonalización</em> se refiere al proceso de seleccionar uno de las posibles funciones de impulsos respuestas que sea más interesante para el análisis económico.</p>
-<p>Si definimos la matriz A en función del operador de rezagos:
+<p>Si definimos la matriz <span class="math inline">\(A^{*}\)</span> en función del operador de rezagos:
 <span class="math display">\[\begin{equation}
-A=\left( \begin{array}{cccc}
+A^{*}=\left( \begin{array}{cccc}
 L      &amp; NA  &amp; \cdots &amp; NA\\
 \beta_{1,2} &amp; L   &amp;        &amp; NA\\
 \vdots &amp;     &amp; \ddots &amp; NA\\
@@ -1041,11 +1070,11 @@ L      &amp; NA  &amp; \cdots &amp; NA\\
 \end{equation}\]</span></p>
 <p>Un VAR expresado en notación vectorial estaría dado:</p>
 <p><span class="math display">\[\begin{align}
-A(L)x_{t}&amp;=w_{t},\;\;A(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
+A^{*}(L)x_{t}&amp;=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
 \end{align}\]</span></p>
-<p>Si definimos la matriz D en función de sus rezagos:
+<p>Si definimos la matriz B en función de sus rezagos:
 <span class="math display">\[\begin{equation}
-D=\left( \begin{array}{cccc}
+B=\left( \begin{array}{cccc}
 L      &amp; NA  &amp; \cdots &amp; NA\\
 \Phi_{1,2} &amp; L   &amp;        &amp; NA\\
 \vdots &amp;     &amp; \ddots &amp; NA\\
@@ -1055,12 +1084,12 @@ L      &amp; NA  &amp; \cdots &amp; NA\\
 \end{equation}\]</span></p>
 <p>En notación MA se escribe:</p>
 <p><span class="math display">\[\begin{align}
-x_{t}&amp;=D(L)w_{t},\;\;D(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
+x_{t}&amp;=B(L)w_{t},\;\;B(0)=I,\;\;E(w_{t}w_{t}^{&#39;})=\Sigma_w 
 \end{align}\]</span></p>
-<p>Donde <span class="math inline">\(D(L)=A(L)^{-1}\)</span>, siendo <span class="math inline">\(D(L)\)</span> la respuesta de <span class="math inline">\(x_{t}\)</span> a una unidad de impulso de cada elemento de <span class="math inline">\(\epsilon_{t}\)</span></p>
-<p>Ahora supongase que queremos calcular la respuesta de <span class="math inline">\(x_{t}\)</span> a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de <span class="math inline">\(x_{t}\)</span> de un schocks tal que: <span class="math inline">\(\eta_{1t}=\epsilon_{yt}\)</span> y <span class="math inline">\(\eta_{2t}=5\epsilon_{yt}+\epsilon_{zt}\)</span> ó:
+<p>Donde <span class="math inline">\(B(L)=A^{*}(L)^{-1}\)</span>, siendo <span class="math inline">\(B(L)\)</span> la respuesta de <span class="math inline">\(x_{t}\)</span> a una unidad de impulso de cada elemento de <span class="math inline">\(e_{t}\)</span></p>
+<p>Ahora supongase que queremos calcular la respuesta de <span class="math inline">\(x_{t}\)</span> a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de <span class="math inline">\(x_{t}\)</span> de un schocks tal que: <span class="math inline">\(\eta_{1t}=e_{\pi t}\)</span> y <span class="math inline">\(\eta_{2t}=5e_{\pi t}+e_{mt}\)</span> ó:
 <span class="math display">\[\begin{equation}
-\eta_{t}=Q\epsilon_{t},\;\;Q=\left( \begin{array}{cc}
+\eta_{t}=Qw_t,\;\;Q=\left( \begin{array}{cc}
     1 &amp; 0\\
     5 &amp; 1
 \end{array}
@@ -1072,34 +1101,35 @@ x_{t}&amp;=C(L)\eta_{t},\;\;C(L)=B(L)Q^{-1}
 \end{align}\]</span></p>
 <p>Donde C(L) representa la respuesta de <span class="math inline">\(x_{t}\)</span> a los schocks <span class="math inline">\(\eta_{t}\)</span>, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales B(L).</p>
 <p>Pero ¿Qué combinación lineal deberíamos observar?</p>
-<p>Es de notar que los datos no nos pueden ayudar ya que tanto la representación son equivalentes y producen las mismas series. Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados <em>supuestos de ortogonalización</em>.</p>
+<p>Es de notar que los datos no nos pueden ayudar ya que tanto la representación <span class="math inline">\(x_{t}=B(L)w_{t}\)</span> y <span class="math inline">\(x_{t}=C(L)\eta_{t}\)</span> son equivalentes y producen las mismas series.</p>
+<p>Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados <em>supuestos de ortogonalización</em>.</p>
 </div>
 <div id="supuestos-de-ortogonalización" class="section level2" number="1.5">
 <h2><span class="header-section-number">1.5</span> Supuestos de Ortogonalización</h2>
 <p>El primero y quizás el más popular supuesto es que los shocks son ortogonales (no están correlacionados).</p>
-<p>Si dos shocks <span class="math inline">\(\epsilon_{yt}\)</span> y <span class="math inline">\(\epsilon_{zt}\)</span> están correlacionados entonces no tiene sentido preguntarse, ¿qué pasa si <span class="math inline">\(\epsilon_{yt}\)</span> se impulsa en una unidad?, pues obviamente también se estaría moviendo <span class="math inline">\(\epsilon_{zt}\)</span> al mismo tiempo.</p>
-<p>Un ejemplo concreto, nosotros queremos saber la función impulso respuesta en términos causales, es decir el <em>efecto</em> de las remesa en el PIB. Pero si el shock de las remesas está correlacionado al shock del PIB, no podemos saber si lo que estamos viendo como respuesta del PIB a un shock de remesas es debido a un shock en el PIB del país de origen de las remesas.</p>
-<p>Adicionalmente es conveniente reescalar el shock para que este se expresa en unidades de la varianza de las series.\
-El supuesto de shocks ortogonales busca encontrar una matriz Q, tal que <span class="math inline">\(E(\eta_{t}\eta_{t}^{&#39;})=I\)</span>. Por lo cual:</p>
+<p>Si dos shocks <span class="math inline">\(e_{\pi t}\)</span> y <span class="math inline">\(e_{mt}\)</span> están correlacionados entonces no tiene sentido preguntarse, ¿qué pasa si <span class="math inline">\(e_{\pi t}\)</span> se impulsa en una unidad?, pues obviamente también se estaría moviendo <span class="math inline">\(e_{mt}\)</span> al mismo tiempo.</p>
+<p>Un ejemplo concreto, nosotros queremos saber la función impulso respuesta en términos causales, es decir el <em>efecto</em> de la inflación en el precio de las manzanas. Pero si el shock de la inflación está correlacionado al shock del precio de las manzanas, no podemos saber si lo que estamos viendo como respuesta del precio de las manzanas se debe a un shock de inflación ó es debido a un shock en la oferta de las manzanas.</p>
+<p>Adicionalmente es conveniente reescalar el shock para que este se exprese en unidades de la varianza de las series.</p>
+<p>El supuesto de shocks ortogonales busca encontrar una matriz Q, tal que <span class="math inline">\(E(\eta_{t}\eta_{t}^{&#39;})=I\)</span>. Por lo cual:</p>
 <p><span class="math display">\[\begin{align}
-Q^{-1}Q^{-1&#39;}&amp;=\Sigma \\
-E(\eta_{t}\eta_{t}^{&#39;})&amp;=E(Q\epsilon_{t}\epsilon_{t}^{&#39;}Q^{&#39;})=Q\Sigma Q^{&#39;}=I\nonumber
+Q^{-1}Q^{-1&#39;}&amp;=\Sigma_{\eta} \\
+E(\eta_{t}\eta_{t}^{&#39;})&amp;=E(Qw_{t}w_{t}^{&#39;}Q^{&#39;})=Q\Sigma_{w} Q^{&#39;}=I\nonumber
 \end{align}\]</span></p>
 </div>
 <div id="ortogonalización-de-sims" class="section level2" number="1.6">
 <h2><span class="header-section-number">1.6</span> Ortogonalización de Sims</h2>
-<p>Una vía de construir la matriz Q es por la descomposición de Choleski.\
-Desafortunadamente, existe muchas matrices Q que pueden hacer cumplir la identidad (22), entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizara la teoría económica para especificar C(0) y C(1).</p>
+<p>Una vía de construir la matriz Q es por la descomposición de Choleski.</p>
+<p>Desafortunadamente existen muchas matrices Q que pueden hacer cumplir la identidad <span class="math inline">\(E(\eta_{t}\eta_{t}^{&#39;})=I\)</span>, entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizara la teoría económica para especificar C(0) y C(1).</p>
 <p>Sims sugiere que se especifica las propiedades de C(0).</p>
-<p>Enfatizando el hecho de que sólo en el caso en que <span class="math inline">\(\Sigma\)</span> sea diagonal, cualquier diagonalización de la matriz Q debería tener elementos en la posición no diagonal y por tanto <span class="math inline">\(C(0)\neq I\)</span>, implicando que algún shocks debería tener efecto contemporáneo en más de una variable.</p>
+<p>Enfatizando el hecho de que sólo en el caso en que <span class="math inline">\(\Sigma_{w}\)</span> sea diagonal, cualquier diagonalización de la matriz Q debería tener elementos en la posición no diagonal y por tanto <span class="math inline">\(C(0)\neq I\)</span>, implicando que algún shocks debería tener efecto contemporáneo en más de una variable.</p>
 <p>En especifico Sims sugiere escoger una matriz triangular inferior C(0) tal que:</p>
 <p><span class="math display">\[\begin{equation}
     \left( \begin{array}{c}
-    y_{t} \\
-    z_{t} 
+    \pi_{t} \\
+      m_{t} 
     \end{array}\right)=\left( \begin{array}{cc}
-    C_{0yy} &amp; 0\\
-    C_{0zy} &amp; C_{0zz}
+    C_{0\pi \pi} &amp; 0\\
+    C_{0m  \pi} &amp; C_{0mm}
     \end{array}
     \right) \left( \begin{array}{c}
     \eta_{1t}\\
@@ -1107,32 +1137,27 @@ Desafortunadamente, existe muchas matrices Q que pueden hacer cumplir la identid
     \end{array}
     \right) +C_{1}\eta_{t-1}+\cdots
 \end{equation}\]</span></p>
-<p>La matriz triangular inferior C(0) implica que <span class="math inline">\(y_{t}\)</span> aparece en la ecuación de <span class="math inline">\(z_{t}\)</span>, pero <span class="math inline">\(z_{t}\)</span> no en la ecuación de <span class="math inline">\(y_{t}\)</span>. Para observar lo anterior podemos representar el sistema dado por (23) como un proceso autorregresivo y ortogonalizado: <span class="math inline">\(D(L)x_{t}=\eta_{t}\)</span>, donde <span class="math inline">\(D(L)=C(L)^{-1}\)</span>; recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:</p>
+<p>La matriz triangular inferior C(0) implica que <span class="math inline">\(\pi_{t}\)</span> aparece en la ecuación de <span class="math inline">\(m_{t}\)</span>, pero <span class="math inline">\(m_{t}\)</span> no en la ecuación de <span class="math inline">\(\pi_{t}\)</span>. Para observar lo anterior podemos representar el sistema dado por la ecuación anterior como un proceso autorregresivo y ortogonalizado: <span class="math inline">\(D(L)x_{t}=\eta_{t}\)</span>, donde <span class="math inline">\(D(L)=C(L)^{-1}\)</span>; recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:</p>
 <p><span class="math display">\[\begin{equation}
       \left( \begin{array}{cc}
-      D_{0yy} &amp; 0\\
-      D_{0zy} &amp; D_{0zz}
+      D_{0\pi m} &amp; 0\\
+      D_{0m \pi} &amp; D_{0mm}
       \end{array}
       \right)
       \left( \begin{array}{c}
-      y_{t} \\
-      z_{t} 
+      \pi_{t} \\
+       m_{t} 
       \end{array}\right)+D_{1}x_{t-1}+\cdots=\eta_{t}\nonumber
 \end{equation}\]</span></p>
-<p>Ó</p>
+<p>Es de notar que la sugerencia de Sims es equivalente a estimar un sistema <span class="math inline">\((\pi_{t}, m_{t})\)</span> por OLS, en que la ecuación de <span class="math inline">\(m_{t}\)</span> tenga como regresor <span class="math inline">\(\pi_{t}\)</span>, pero no viceversa y escalando cada ecuación para que la varianza del error sea 1.</p>
 <p><span class="math display">\[\begin{align}
-D_{0yy}y_{t}&amp;=\;\;\;\;\;\;\;\;\;\;\;\;-D_{1yy}y_{t-1}-D_{1yz}z_{t-1}+\eta_{1t}\nonumber \\
-D_{0zz}z_{t}&amp;=D_{0zy}y_{t}-D_{1zy}y_{t-1}-D_{1zz}z_{t-1}+\eta_{2t}\nonumber
+\pi_{t}&amp;=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1\pi \pi}\pi_{t-1}+\cdots+\alpha_{1\pi m}m_{t-1}+\cdots+\eta_{1t}\nonumber \\
+m_{t}&amp;=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_{t-1}+\cdots +\eta_{2t}\nonumber
 \end{align}\]</span></p>
-<p>Es de notar que la sugerencia de Sims es equivalente a estimar un sistema <span class="math inline">\((y_{t}, z_{t})\)</span> por OLS, en que la ecuación de <span class="math inline">\(z_{t}\)</span> tenga como regresor <span class="math inline">\(y_{t}\)</span>, pero no viceversa y escalando cada ecuación para que la varianza del error sea 1.</p>
-<p><span class="math display">\[\begin{align}
-y_{t}&amp;=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1yy}y_{t-1}+\cdots+\alpha_{1yz}z_{t-1}+\cdots+\eta_{1t}\nonumber \\
-z_{t}&amp;=\alpha_{0zy}y_{t}+\alpha_{1zy}y_{t-1}+\cdots+\alpha_{1zz}z_{t-1}+\cdots +\eta_{2t}\nonumber
-\end{align}\]</span></p>
-<p>En resumen se puede unicamente especificar la matriz Q como una combinación lineal de los shocks originales <span class="math inline">\((\epsilon_{t})\)</span> y elaborar los impulsos respuesta de acuerdo a:</p>
+<p>En resumen se puede unicamente especificar la matriz Q como una combinación lineal de los shocks originales <span class="math inline">\((w_{t})\)</span> y elaborar los impulsos respuesta de acuerdo a:</p>
 <ol style="list-style-type: decimal">
-<li>El error <span class="math inline">\((\epsilon_{t})\)</span> son ortogonales.</li>
-<li>Que la respuesta instantánea de una variable a un shock es cero, siendo este al caso de estimar un VAR por OLS con efecto contemporaneo de y sobre z y no viceversa.</li>
+<li>El error <span class="math inline">\((w_{t})\)</span> son ortogonales.</li>
+<li>Que la respuesta instantánea de una variable a un shock es cero, siendo este al caso de estimar un VAR por OLS con efecto contemporaneo de <span class="math inline">\(\pi\)</span> sobre m y no viceversa.</li>
 </ol>
 <p>Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior Q:
 <span class="math display">\[\begin{align}
