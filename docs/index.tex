@@ -116,7 +116,7 @@
 
 \title{VECTORES AUTOREGRESIVOS (VAR)}
 \author{\href{https://ortiz-cevallos.github.io/MYSELF/}{Luis Ortiz-Cevallos}}
-\date{2022-03-15}
+\date{2022-04-04}
 
 \begin{document}
 \maketitle
@@ -128,8 +128,80 @@
 \hypertarget{introducciuxf3n}{%
 \chapter{INTRODUCCIÓN}\label{introducciuxf3n}}
 
-\hypertarget{el-modelo-de-vectores-autoregresivos-var}{%
-\section{El modelo de vectores autoregresivos (VAR)}\label{el-modelo-de-vectores-autoregresivos-var}}
+\hypertarget{proceso-arma}{%
+\section{Proceso ARMA}\label{proceso-arma}}
+
+Un proceso autoregresivo con media móvil (ARMA) es tipicamente continuo. Para disponer de un proceso ARMA es requerido un \textbf{proceso ruido blanco}
+
+Un proceso ruido blanco es aquel que cumple con las sigueintes condiciones:
+
+\begin{align}
+E(\epsilon_{t})&=0\\
+Var(\epsilon_{t})&=\sigma^{2}\\
+Cov(\epsilon_{t}, \epsilon_{t+j})&=0\;\; \forall j
+\end{align}
+
+Dado ese proceso ruido blanco, un proceso ARMA(p,q) es:
+
+\begin{align}
+x_{t}&= a+p_{1}x_{t-1}+p_{2}x_{t-2}+\cdots+p_{p}x_{t-p}+\epsilon_{t}+\theta_{1}\epsilon_{t-1}+\cdots+\theta_{q}\epsilon_{t-q}\\
+x_{t}&= a+\sum_{j=1}^{p}p_{j}x_{t-j}+\epsilon_{t}+\sum_{j=1}^{q}\theta_{j}\epsilon_{t-j}
+\end{align}
+
+\emph{Operador de rezago} si definimo \emph{L} tal que \(L(x_{t})=x_{t-1}\), es posible definir un polinomio de rezagos como:
+
+\(a(L)=1L^{0}+a_{1}L^{1}+\cdots+a_{p}L^{p}\)
+
+De manera que un proceso ARMA(p, q) pueda ser escrito como:
+\begin{equation}
+a(L)x_{t}=b(L)\epsilon_{t}
+\end{equation}
+
+Lo estupendo de un proceso ARMA(p,q) es que \textbf{no son únicos}. Permiten invertir el componente AR del proceso como un MA y viceversa. Considere un ARMA(1,0):
+
+\begin{align}
+x_{t}&=px_{t-1}+\epsilon_{t}\\ 
+(1-pL)x_{t}&=\epsilon_{t}\\
+x_{t}&=\frac{1}{(1-pL)}\epsilon_{t}\\
+x_{t}&=\frac{1}{(1-pL)}\epsilon_{t}\frac{1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots}{1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots}\\
+x_{t}&=(1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots)\epsilon_{t}=b(L)\epsilon_{t}\\
+x_{t}&=\sum_{j=0}^{\infty}p^{j}\epsilon_{t-j}
+\end{align}
+
+De manera análoga podemos pasar de un proceso MA(1) a uno AR(\(\infty\)):
+\begin{align}
+x_{t}&=\epsilon_{t}+\theta\epsilon_{t-1}\\ 
+x_{t}&=(1+\theta L)\epsilon_{t}\\
+\frac{1}{(1+\theta L)}x_{t}&=\epsilon_{t}\\
+\frac{1}{(1+\theta L)}x_{t}\frac{1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots}{1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots}&=\epsilon_{t}\\
+(1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots)x_{t}&=a(L)x_{t}=\epsilon_{t}\\
+\sum_{j=0}^{\infty}-\theta^{j}x_{t}&=\epsilon_{t-j}
+\end{align}
+
+Los anteriores resultados muestran que se puede estimar un proceso MA aproximándolo como un proceso AR. Un proceso AR puede ser estimado consistentemente a través de OLS.
+
+\hypertarget{funciuxf3n-impulso-respuesta-irf}{%
+\section{Función Impulso Respuesta (IRF)}\label{funciuxf3n-impulso-respuesta-irf}}
+
+La IRF es el cambio entre el valor esperado de una variable aleatoria condicionado sobre la realizaciones de la incertidumbre en un punto en el tiempo entre el corriente con respecto al futuro. Formalmente:
+
+\begin{equation}
+IRF=E_{t}x_{t+j}-E_{t-1}x_{t+j}\;\; \forall j\geq 0
+\end{equation}
+
+Si se tiene un proceso ARMA:
+
+\begin{align}
+x_{t}&=b(L)\epsilon_{t}\\ 
+E_{t}x_{t+1}&=E_{t}b(L)\epsilon_{t+1}=b(L)\epsilon_{t}\\
+\end{align}
+
+El anterior resultados es debido a que \(E_{t}x_{t+j}=0\;\;\forall j>0\) lo que significa, usando la misma lógica que que \(E_{t-1}x_{t+j}=0\;\;\forall j\geq 0\).
+
+En conclusión la IFR es \(b(L)\epsilon_{t}\). La representación MA de un proceso es la IFR.
+
+\hypertarget{vectores-autoregresivos-var}{%
+\chapter{Vectores Autoregresivos (VAR)}\label{vectores-autoregresivos-var}}
 
 Un VAR consiste en un conjunto de k variables endógenas \(Y_{t}=\{y_{1t},\cdots, y_{kt}\}\).
 
@@ -169,7 +241,7 @@ u_{t} \\
 
 Lo anterior no es otra cosa que un proceso AR(1), matricialmente:
 
-\(x_t = Ax_{t−1} + Cw_t\)
+\(X_t = AX_{t−1} + Cw_t\)
 
 Este proceso tiene los siguientes supuestos:
 
@@ -197,9 +269,9 @@ Es interesante por:
   Permite la discusión de quién causa a quién.
 \end{enumerate}
 
-Para una proceso AR(1) \(y_{t}=\phi y_{t-1}+\epsilon_{t}\) el cual lo expresamos en MA(\(\infty\)) como \(y_{t}=\sum_{j=0}^{\infty}\phi^{j} \epsilon_{t-j}\), su impulso respuesta es:
+Para una proceso AR(1) \(x_{t}=p x_{t-1}+\epsilon_{t}\) el cual lo expresamos en MA(\(\infty\)) como \(x_{t}=\sum_{j=0}^{\infty}p^{j} \epsilon_{t-j}\), su impulso respuesta es:
 
-\(\begin{array}{cccccccc} \epsilon_{t} &\colon &0&0&1&0&0&0 \\ x_{t} &\colon &0&0&\phi&\phi^{2}&\phi^{3}&\cdots \end{array}\)
+\(\begin{array}{cccccccc} \epsilon_{t} &\colon &0&0&1&0&0&0 \\ x_{t} &\colon &0&0& p &p^{2}&p^{3}&\cdots \end{array}\)
 
 ¿Por qué es importante definir un proceso como un MA\((\infty)\)?
 
@@ -209,11 +281,8 @@ Para una proceso AR(1) \(y_{t}=\phi y_{t-1}+\epsilon_{t}\) el cual lo expresamos
 \item
   La representación MA infinito de todo proceso es \emph{la función impulso respuesta}
 \item
-  La función impulso respuesta es equivalente a \(E_{t}(x_{t+h})-E_{t-1}(x_{t+h})\) que no es otra cosa que el error de pronóstico hacia h pasos adelante.
+  La función impulso respuesta es equivalente a \(E_{t}(x_{t+j})-E_{t-1}(x_{t+j})\) que no es otra cosa que el error de pronóstico hacia j pasos adelante.
 \end{enumerate}
-
-Noten que los pronósticos para horizontes \(h\geq1\) de un proceso VAR(p) puede ser generado de manera recursiva.
-\(x_{t+h/t} = A_{1}x_{t+h-1/t} + \cdots+A_{p}x_{t+h-p/t}\)
 
 \hypertarget{vectores-autoregresivos-estructurales}{%
 \section{Vectores autoregresivos estructurales}\label{vectores-autoregresivos-estructurales}}
@@ -283,16 +352,332 @@ El sistema anterior puede escribirse de forma matricial como:
     \right) 
 \end{equation}
 
+Noten que para que sea un sistema estructural, es decir haya un fundamento económico que defina el orden de prelación de la variable exógena \(\pi\) hacia la endógena \(m\), \(\alpha_{1,2}\) debe ser igual a cero. Por lo que el sistema podría ser escrito como:
+
+\begin{equation}
+    \left( \begin{array}{c}
+    \pi_{t} \\
+      m_{t} 
+    \end{array}\right)=\left( \begin{array}{cc}
+ \beta_{1,1} & \beta_{1,2}\\
+ \omega_{\pi} & \omega_{m}
+    \end{array}
+    \right) \left( \begin{array}{c}
+    \pi_{t-1}\\
+      m_{t-1}
+    \end{array}
+    \right) +
+\left( \begin{array}{cc}
+ \gamma_{e_{\pi}} & 0\\
+ \omega_{e_{\pi}} & 1
+    \end{array}
+    \right) \left( \begin{array}{c}
+    e_{\pi,t}\\
+    e_{m,t} 
+    \end{array}
+    \right) 
+\end{equation}
+
 Expresándolo de forma matricial tenermos:
 
 \begin{equation}
 \label{e1}
-x_t = \Gamma x_{t−1} + Zw_t
+x_t = \Gamma x_{t−1} + Bw_t
 \end{equation}
 
-La ecuación anterior es la \emph{forma estructural}. Sin embargo, cuando se estima el VAR se hace en su \emph{forma reducida}, la que resulta trás premultiplicar por la matriz A:
+Reordenando:
+
+\begin{align}
+x_{t}-\Gamma x_{t−1} &=  Bw_t\\
+A(L)x_{t}&=  Bw_t
+\end{align}
+
+Donde \(A(L)=I-AL\) con A:
+
 \begin{equation}
-\label{e2}
+A=\left( \begin{array}{cc}
+ \beta_{1,1} & \beta_{1,2}\\
+ \omega_{\pi} & \omega_{m}
+    \end{array}
+    \right)
+\end{equation}
+
+El sistema puede ser estimado de manera consistente y eficiente a través de OLS. La razón de la consistencia es que todos los regresores datan de t-1 (particularmente en este caso y en el caso general de t-1 hacia más atrás) mientras los errores datan en t. El término del error suele conocerse como imnovación. En tanto la estimación OLS es eficiente porque los regresores son los mismos en ambas ecuaciones (por lo que en este caso el método de estimación OLS coincide con el método Seemingly unrelated regressions (SUR)).
+
+En otros casos, por ejemplo, el caso entre el precio de las acciones (x) y el consumo (z), sus innovaciones \((e_{x,t}\;e_{z,t})\) están correlacionadas. En esa situación no existe una posible interpretación \emph{estructural} de esas innovaciones. Pues éstas son afectadas por un \emph{factor profundo}. Sin embargo, para efectos de pronóstico un VAR con esas variables no tiene importancia el desconocimiento de ese \emph{factor profundo}. No obstante, para propósito de análisis económmico sí la tiene. Un VAR como el representado por las variables x y z es conocido como de \emph{forma reducida} pues no es posible dar una interpretación \emph{estructural} a sus innovaciones.
+
+El análisis de un VAR estructural (SVAR) presupone que las innovaciones representadas en el VAR \((e_{x,t}\;e_{z,t})\) son conducidas por un \emph{factor profundo} ello es un \emph{shock estructural}. De manera que existe una vinculación líneal entre ese shock estructural \((\epsilon_{t}=[\epsilon_{x,t}\;\;\;\epsilon_{z,t}])\) con las innovaciones de la forma reducida \((e_{t}=[e_{x,t}\;\;\;e_{z,t}])\):
+
+\begin{equation}
+e_{t}=B\epsilon_{t}
+\end{equation}
+
+Sí \(\Sigma_e=E(ee^{\tau})\) es la matriz de varianza y covarianza de la forma reducida, manipulando la ecuación anterior se tiene:
+
+\begin{equation}
+E(ee^{\tau})=BE(\epsilon\epsilon^{\tau})B^{\tau}
+\end{equation}
+
+Como ellas no están correlacionadas los elementos fuera de la diagonal de
+\(\Sigma_\epsilon=E(\epsilon\epsilon^{\tau})\) son cero, y si normalizamos cada uno de los shocks estructurales haciendo que sean igual a la unidad, se tendrían que \(\Sigma_\epsilon=E(\epsilon\epsilon^{\tau})=I\). Por tanto la ecuación anterior se expresa como:
+
+\begin{equation}
+E(ee^{\tau})=BB^{\tau}
+\end{equation}
+
+Lo anterior nos lleva a un sistema de ecuaciones que sin algún supuesto estaría indeterminado. Pues para el caso de dos variables existen 4 elementos únicos en la matriz B y 4 elmentos únicos en la matriz \(BB^{\tau}\). Pero en la matriz \(\Sigma_e\) solo existen tres elementos únicos, pues una matriz de varianza y covarianza es simétrica. En conclusión sin imponer un supuesto sobre la matriz B no es posible la identificación.
+
+En el caso general de un VAR con n variables, existen n innovaciones, la matriz de varianza y covarianza de esas n innovaciones tendrían \(n^{2}\) elementos, pero de los cuales solo \(\frac{n^{2}+n}{2}\) serían únicos. Dado que \(BB^{\tau}\) tendría \(n^{2}\) elementos se requiere que tenga \(\frac{n^{2}+n}{2}\) elementos únicos para que el sistema sea identificado, lo que significa imponer \(\frac{n(n-1)}{2}\) restricciones. En el caso de n=2 implica imponer sobre B una sola restricción.
+
+Las restricciones que se impongan \emph{deben provenir de la teoría económica.} Las restricciones que más suelen utilizarse son las del tipo recursivas, ello son las que hacen un supuesto sobre la temporalidad en que algunos shocks solo afectan a ciertas variables con un rezago. Lo anterior implica que algunos elementos en la matriz B son ceros. En el último ejemplo suponga que \(\epsilon_{z,t}\) no afectan \(x_{t}\) haciendo que el elmento (1,2) en la matriz B sea cero. Con esa restricción los tres elementos restantes de la matriz B pueden ser identificados desde la matriz de varianza y covarianza de los errores en su forma reducida.
+
+¿Son las restricciones del tipo recursiva ciertas en la realidad? Aveces. En la literatura de política monetaria es común pensar que los shocks de esa políticas afectan a la economía con rezago. Supongamos un VAR entre la tasa del fed fund y la tasa de crecimiento real del PIB de USA, \(Y_{t}=[i_{t}\;\; \Delta y_{t}]\). Se podría interpretar como que \(\epsilon_{i,t}\) es un shock de política monetaria, mientras \(\epsilon_{\Delta y,t}\) es un shock de oferta. Bajo estos supuestos la posición (2, 1) en la matriz B es cero.
+
+Una vez identificado un SVAR, lo que interesa es conocer la función impulso respuesta y la descomposición de la varianza, esto significa que lo que interesa es la dinámica de las variables ante un shock. Como se dijo anteriormente la IFR es la representación MA de un proceso ARMA:
+
+\begin{equation}
+A(L)Y_{t}=B\epsilon_{t}
+\end{equation}
+
+Si se invierte el proceso AR y definimos \(C(L)=A(L)^{-1}B\) ésta sería la matriz de polinomios con los coeficientes de media móviles estructurales. Es importante notar que la matriz B es la que gobierna los impulsos-respuestas por esa razón se conoce como la matriz de impacto.
+
+\begin{equation}
+Y_{t}=A(L)^{-1}B\epsilon_{t}=C(L)\epsilon_{t}
+\end{equation}
+
+Para encontrar la IRF definimos \(C_{i,j}(h)\) la respuesta de la variable i ante un shock en la variable j en el horizonte h.
+
+El error de pronóstico de una variable en el período t es el cambio en la variable que no pudo ser pronósticado entre el período t-1 y t. Ello se debe a la realización de los shocks estructurales en un sistema (\(\epsilon_{t}\)). Es posible computar el error de pronóstico para muchos horizontes h. El error de pronóstico en h=0 para cada variable en nuestro sistema es:
+
+\begin{align}
+E_{t}\Delta y_{t}-E_{t-1}\Delta y_{t}&=C_{1,1}(0)\epsilon_{\Delta y, t}+C_{1,2}(0)\epsilon_{i, t}\\
+E_{t}i_{t}-E_{t-1}i_{t}&=C_{2,1}(0)\epsilon_{\Delta y, t}+C_{2,2}(0)\epsilon_{i, t}
+\end{align}
+
+La varianza del error de pronóstico es su cuadrado. Si se define \(\Omega_{i}(h)\) como la varianza del error de pronóstico de la variable i en el horizonte h. Entonces su calculo en h=0 es simple:
+
+\begin{align}
+\Omega_{\Delta y}(0)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}\\
+\Omega_{i}(0)       &=C_{2,1}(0)^{2}+C_{2,2}(0)^{2} 
+\end{align}
+
+Lo anterior sigute el supuesto que el shock tiene varianza unitaria y no están correlacionadas. El error de pronósticos para estas variables en el horizonte h=1 es:
+
+\begin{align}
+E_{t}\Delta y_{t+1}-E_{t-1}\Delta y_{t+1}&=C_{1,1}(0)\epsilon_{\Delta y, t+1}+C_{1,2}(0)\epsilon_{i, t+1}+C_{1,1}(1)\epsilon_{\Delta y, t}+C_{1,2}(1)\epsilon_{i, t}\\
+E_{t}i_{t+1}-E_{t-1}i_{t+1}&=C_{2,1}(0)\epsilon_{\Delta y, t+1}+C_{2,2}(0)\epsilon_{i, t+1}+C_{2,1}(1)\epsilon_{\Delta y, t}+C_{2,2}(1)\epsilon_{i, t}
+\end{align}
+
+Y la varianza del error de pronóstico sería:
+
+\begin{align}
+\Omega_{\Delta y}(1)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}+C_{1,1}(1)^{2}+C_{1,2}(1)^{2}\\
+\Omega_{i}(1)       &=C_{2,1}(0)^{2}+C_{2,2}(0)^{2}+C_{2,1}(1)^{2}+C_{2,2}(1)^{2}  
+\end{align}
+
+Es posible definir la varianza del error de pronóstico de manera \emph{recursiva} para disponerse por más períodos:
+
+\begin{align}
+\Omega_{\Delta y}(0)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}\\
+\Omega_{\Delta y}(1)&=C_{1,1}(1)^{2}+C_{1,2}(1)^{2}+\Omega_{\Delta y}(0)\\
+\vdots              &    \vdots\\
+\Omega_{\Delta y}(h)&=C_{1,1}(h)^{2}+C_{1,2}(h)^{2}+\Omega_{\Delta y}(h-1)
+\end{align}
+
+De manera más general para un VAR de n variables, la varianza total del error de pronóstico de la variable i está dado por:
+
+\begin{equation}
+\Omega_{i}(h)=\sum_{k=0}^{h} \sum_{j=1}^{n}C_{i,j}(k)^{2}
+\end{equation}
+
+\emph{La descomposición de la varianza del error de pronóstico}, es la manera de cuantificar que tan importante es cada shock en explicar la varianción que experimenta cada una de las variables en un sistema VAR. Esto es igual a la fracción de la varianza del error de pronósitico de cada variable dado cada uno de los shock en cada uno de los horizontes. Específicamemte, si definimos \(\omega_{i,j}(h)\) como la varianza en el error de pronóstico de la variable i ante un shock en la variable j en el horizonte h, se tiene:
+
+\begin{equation}
+\omega_{i, j}(h)=\sum_{k=0}^{h} C_{i,j}(k)^{2}
+\end{equation}
+
+La fracción de la varianza del error de pronóstico de la variable i dado por el shock en la variable j en el horizonte h denotado por \(\phi_{i,j}(h)\) es lo de arriba dividido por la varianza total del error de pronóstico:
+
+\begin{equation}
+\phi_{i,j}(h)=\frac{\omega_{i, j}(h)}{\Omega_{i}(h)}=\frac{\sum_{k=0}^{h} C_{i,j}(k)^{2}}{\sum_{k=0}^{h} \sum_{j=1}^{n}C_{i,j}(k)^{2}}
+\end{equation}
+
+\hypertarget{aplicaciuxf3n}{%
+\section{Aplicación}\label{aplicaciuxf3n}}
+
+\citet{Cochrane94} estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios (\(c_{t}\)) y el PIB real (y\_\{t\}). Introduciendo 2 rezago el VAR se expesa como:
+
+\begin{align}
+c_{t}&= a_{c}+\beta_{1,1}^{c}c_{t-1}+\beta_{1,2}^{c}y_{t-1}+\beta_{2,1}^{c}c_{t-2}+\beta_{2,2}^{c}y_{t-2}+e_{c,t}\\
+y_{t}&= a_{y}+\beta_{1,1}^{y}c_{t-1}+\beta_{1,2}^{y}y_{t-1}+\beta_{2,1}^{y}c_{t-2}+\beta_{2,2}^{y}y_{t-2}+e_{y,t}
+\end{align}
+
+Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente estimación:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(quantmod)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(stargazer)}
+\FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"PCENDC96"}\NormalTok{, }\StringTok{"PCESC96"}\NormalTok{, }\StringTok{"GDPC1"}\NormalTok{),}
+           \AttributeTok{src =} \StringTok{"FRED"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "PCENDC96" "PCESC96"  "GDPC1"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{C}\OtherTok{\textless{}{-}}\NormalTok{PCENDC96}\SpecialCharTok{+}\NormalTok{PCESC96}
+\NormalTok{ep\_c       }\OtherTok{\textless{}{-}}\FunctionTok{endpoints}\NormalTok{(C, }\AttributeTok{on =} \StringTok{"quarters"}\NormalTok{)}
+\NormalTok{C          }\OtherTok{\textless{}{-}}\FunctionTok{period.apply}\NormalTok{(C , }\AttributeTok{INDEX =}\NormalTok{ ep\_c, }\AttributeTok{FUN =}\NormalTok{ last)}
+\NormalTok{GDPC1      }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(GDPC1, }\FunctionTok{index}\NormalTok{(C), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
+\NormalTok{GDPC1      }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(GDPC1, }\AttributeTok{fromLast =} \ConstantTok{FALSE}\NormalTok{))}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(C, GDPC1, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{date=}\FunctionTok{index}\NormalTok{(BASE), }\FunctionTok{coredata}\NormalTok{(BASE))}
+\FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"C"}\NormalTok{, }\StringTok{"Y"}\NormalTok{)}
+\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{DC       =}\NormalTok{  C}\SpecialCharTok{{-}}\FunctionTok{lag}\NormalTok{(C, }\AttributeTok{n=}\DecValTok{4}\NormalTok{))}
+\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{c        =}\NormalTok{ (DC}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{lag}\NormalTok{(C, }\AttributeTok{n=}\DecValTok{4}\NormalTok{)))}\SpecialCharTok{*}\DecValTok{1}\NormalTok{)}
+\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{DY       =}\NormalTok{  Y}\SpecialCharTok{{-}}\FunctionTok{lag}\NormalTok{(Y, }\AttributeTok{n=}\DecValTok{4}\NormalTok{))}
+\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{y        =}\NormalTok{ (DY}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{lag}\NormalTok{(Y, }\AttributeTok{n=}\DecValTok{4}\NormalTok{)))}\SpecialCharTok{*}\DecValTok{1}\NormalTok{)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, c, y)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(DATA, date }\SpecialCharTok{\textgreater{}=} \StringTok{"2003{-}03{-}01"}\NormalTok{)}
+\NormalTok{DATA       }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(DATA[,}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{], }\AttributeTok{order.by=}\FunctionTok{as.Date}\NormalTok{(DATA[,}\DecValTok{1}\NormalTok{], }\StringTok{"\%Y/\%m/\%d"}\NormalTok{))}
+\FunctionTok{library}\NormalTok{(}\StringTok{"svars"}\NormalTok{)}
+\NormalTok{VAR\_1      }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(DATA, }\AttributeTok{p =} \DecValTok{2}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}const\textquotesingle{}}\NormalTok{)}
+\NormalTok{VAR\_1}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{y}\SpecialCharTok{$}\NormalTok{coefficients}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         c.l1         y.l1         c.l2         y.l2        const 
+##  1.299144187  0.178352073 -1.429590045  0.604256673  0.006285347
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{VAR\_1}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{c}\SpecialCharTok{$}\NormalTok{coefficients}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         c.l1         y.l1         c.l2         y.l2        const 
+##  0.975774352  0.010371371 -0.651664645  0.313857444  0.005744135
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SIGMA}\OtherTok{\textless{}{-}}\FunctionTok{summary}\NormalTok{(VAR\_1)}
+\NormalTok{SIGMA}\SpecialCharTok{$}\NormalTok{covres}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##              c            y
+## c 0.0001952119 0.0001018477
+## y 0.0001018477 0.0001333163
+\end{verbatim}
+
+De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente \(\epsilon_{1,t}\) y del ingreso transitorio \(\epsilon_{2,t}\). La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que \(B_{1,2}=0\).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{B }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\ConstantTok{NA}\NormalTok{, }\DecValTok{4}\NormalTok{), }\AttributeTok{ncol =} \DecValTok{2}\NormalTok{)}
+\NormalTok{B[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{] }\OtherTok{\textless{}{-}} \DecValTok{0}
+\NormalTok{SVAR\_1  }\OtherTok{\textless{}{-}} \FunctionTok{SVAR}\NormalTok{(VAR\_1, }\AttributeTok{estmethod=}\StringTok{"direct"}\NormalTok{, }\AttributeTok{Bmat =}\NormalTok{ B)}
+\NormalTok{SVAR\_1}\SpecialCharTok{$}\NormalTok{B }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##             c           y
+## c 0.013972801 0.000000000
+## y 0.007289874 0.008953255
+\end{verbatim}
+
+Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{FIR\_1 }\OtherTok{\textless{}{-}} \FunctionTok{irf}\NormalTok{(SVAR\_1,}\AttributeTok{n.ahead =} \DecValTok{20}\NormalTok{, }\AttributeTok{impulse =} \FunctionTok{c}\NormalTok{(}\StringTok{"c"}\NormalTok{,}\StringTok{"y"}\NormalTok{), }\AttributeTok{boot =}\ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{RESULTADO}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(FIR\_1}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{c)}
+\NormalTok{PERIODO}\OtherTok{\textless{}{-}}\FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{21}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"consumo"}\NormalTok{,}\DecValTok{21}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,CODE)}
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\NormalTok{RESULTADO2}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(FIR\_1}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{y)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"producto"}\NormalTok{,}\DecValTok{21}\NormalTok{)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,CODE)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{rbind}\NormalTok{(RESULTADO,RESULTADO2)}
+
+\DocumentationTok{\#\#\#\#HACER MI PROPIO GRÁFICO\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\FunctionTok{library}\NormalTok{(tidyr)}
+\NormalTok{BASE\_LONG }\OtherTok{\textless{}{-}} \FunctionTok{gather}\NormalTok{(RESULTADO, }\AttributeTok{key=}\StringTok{"measure"}\NormalTok{, }\AttributeTok{value=}\StringTok{"value"}\NormalTok{,}
+                    \FunctionTok{c}\NormalTok{(}\StringTok{"c"}\NormalTok{, }\StringTok{"y"}\NormalTok{))}
+
+\NormalTok{BASE\_LONG}\SpecialCharTok{$}\NormalTok{measure }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(BASE\_LONG}\SpecialCharTok{$}\NormalTok{measure,}
+                            \AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"c"}\NormalTok{,}\StringTok{"y"}\NormalTok{))}
+
+\NormalTok{variable\_names }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
+  \StringTok{"c"} \OtherTok{=} \StringTok{"Respuesta del consumo"}\NormalTok{,}
+  \StringTok{"y"} \OtherTok{=} \StringTok{"Respuesta del producto"}
+\NormalTok{)}
+\NormalTok{variable\_labeller2 }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(variable,value)\{}
+  \ControlFlowTok{if}\NormalTok{ (variable}\SpecialCharTok{==}\StringTok{\textquotesingle{}measure\textquotesingle{}}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(variable\_names[value])}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \FunctionTok{return}\NormalTok{(region\_names)}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\NormalTok{paleta}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\FunctionTok{ggplot}\NormalTok{(BASE\_LONG, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PERIODO, }\AttributeTok{y=}\NormalTok{value, }\AttributeTok{group =}\NormalTok{ CODE,}
+                         \AttributeTok{colour=}\NormalTok{CODE))}\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(.}\SpecialCharTok{\textasciitilde{}}\NormalTok{measure, }\AttributeTok{scales=}\StringTok{"free"}\NormalTok{, }\AttributeTok{labeller=}\NormalTok{ variable\_labeller2)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Respuesta"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Períodos"}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept=}\DecValTok{0}\NormalTok{, }\AttributeTok{linetype=}\StringTok{"dashed"}\NormalTok{,}
+             \AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size=}\DecValTok{1}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size=}\FloatTok{1.5}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values=}\NormalTok{paleta,}
+                     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Shock permanente"}\NormalTok{, }
+                                \StringTok{"Shock transitorio"}\NormalTok{))}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.right =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{14}\NormalTok{),}
+           \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+           \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.border =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.key=}\FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"white"}\NormalTok{,}
+                                   \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{),}
+           \AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.text  =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{10}\NormalTok{),}
+           \AttributeTok{legend.position=}\StringTok{"bottom"}\NormalTok{,}
+           \AttributeTok{legend.spacing.x =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.10}\NormalTok{, }\StringTok{\textquotesingle{}cm\textquotesingle{}}\NormalTok{),}
+           \AttributeTok{legend.margin=}\FunctionTok{margin}\NormalTok{(),}
+           \AttributeTok{legend.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"transparent"}\NormalTok{,}
+                                            \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{)}\SpecialCharTok{+}\FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{1}\NormalTok{))}
+\NormalTok{Z}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+El impulso respuesta mostrado en la figura anterior es consistente con la teoría, pues se observa como el consumo se mueve poco ante un shock transitorio. La descomposición de la varianza por su parte revela:
+
+La ecuación anterior es la \emph{forma estructural}. Sin embargo, cuando se estima el VAR se hace en su \emph{forma reducida}, la que resulta trás premultiplicar por la matriz A:
+
+\begin{equation}
 Ax_t = A\Gamma x_{t−1} + Bw_t
 \end{equation}
 
@@ -618,7 +1003,7 @@ Y representamos la función impulso respuesta ante un shock en \(\pi\).
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-8-1.pdf}
 
 Finalmente, podemos observar la descomposición de la varianza de la variable \(\pi\):
 
@@ -664,7 +1049,7 @@ Finalmente, podemos observar la descomposición de la varianza de la variable \(
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-6-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-9-1.pdf}
 
 A continuación se replicará los resultados obtenidos por \citet{Herwartz2016}, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función \emph{id.cv()} dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -679,7 +1064,7 @@ Un primer paso es visualizar cada una de las series.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-7-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-10-1.pdf}
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función \emph{id.cv()} la cual introduce el \emph{cambio en la varianza} que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento \emph{SB} en formato \emph{ts}:
 
@@ -943,7 +1328,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-15-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-18-1.pdf}
 
 El resumen el resultado revela que solo el 12.7\% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta.
 
@@ -966,7 +1351,7 @@ crea un objeto para la inspección visual de la descomposición de la varianza d
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-16-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-19-1.pdf}
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50\% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5\% de la media de predicción
 error al cuadrado.

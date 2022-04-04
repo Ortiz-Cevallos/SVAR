@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-03-15"
+date: "2022-04-04"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -18,7 +18,81 @@ link-citations: yes
 
 # INTRODUCCIÓN
 
-## El modelo de vectores autoregresivos (VAR)
+## Proceso ARMA
+
+Un proceso autoregresivo con media móvil (ARMA) es tipicamente continuo. Para disponer de un proceso ARMA es requerido un **proceso ruido blanco**
+
+Un proceso ruido blanco es aquel que cumple con las sigueintes condiciones:
+
+\begin{align}
+E(\epsilon_{t})&=0\\
+Var(\epsilon_{t})&=\sigma^{2}\\
+Cov(\epsilon_{t}, \epsilon_{t+j})&=0\;\; \forall j
+\end{align}
+
+Dado ese proceso ruido blanco, un proceso ARMA(p,q) es:
+
+\begin{align}
+x_{t}&= a+p_{1}x_{t-1}+p_{2}x_{t-2}+\cdots+p_{p}x_{t-p}+\epsilon_{t}+\theta_{1}\epsilon_{t-1}+\cdots+\theta_{q}\epsilon_{t-q}\\
+x_{t}&= a+\sum_{j=1}^{p}p_{j}x_{t-j}+\epsilon_{t}+\sum_{j=1}^{q}\theta_{j}\epsilon_{t-j}
+\end{align}
+
+*Operador de rezago* si definimo *L* tal que $L(x_{t})=x_{t-1}$, es posible definir un polinomio de rezagos como:
+
+$a(L)=1L^{0}+a_{1}L^{1}+\cdots+a_{p}L^{p}$
+
+De manera que un proceso ARMA(p, q) pueda ser escrito como:
+\begin{equation}
+a(L)x_{t}=b(L)\epsilon_{t}
+\end{equation}
+
+Lo estupendo de un proceso ARMA(p,q) es que **no son únicos**. Permiten invertir el componente AR del proceso como un MA y viceversa. Considere un ARMA(1,0):
+
+\begin{align}
+x_{t}&=px_{t-1}+\epsilon_{t}\\ 
+(1-pL)x_{t}&=\epsilon_{t}\\
+x_{t}&=\frac{1}{(1-pL)}\epsilon_{t}\\
+x_{t}&=\frac{1}{(1-pL)}\epsilon_{t}\frac{1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots}{1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots}\\
+x_{t}&=(1+pL+p^{2}L^{2}+p^{3}L^{3}\cdots)\epsilon_{t}=b(L)\epsilon_{t}\\
+x_{t}&=\sum_{j=0}^{\infty}p^{j}\epsilon_{t-j}
+\end{align}
+
+De manera análoga podemos pasar de un proceso MA(1) a uno AR($\infty$):
+\begin{align}
+x_{t}&=\epsilon_{t}+\theta\epsilon_{t-1}\\ 
+x_{t}&=(1+\theta L)\epsilon_{t}\\
+\frac{1}{(1+\theta L)}x_{t}&=\epsilon_{t}\\
+\frac{1}{(1+\theta L)}x_{t}\frac{1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots}{1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots}&=\epsilon_{t}\\
+(1-\theta L-\theta^{2}L^{2}-\theta^{3}L^{3}\cdots)x_{t}&=a(L)x_{t}=\epsilon_{t}\\
+\sum_{j=0}^{\infty}-\theta^{j}x_{t}&=\epsilon_{t-j}
+\end{align}
+
+Los anteriores resultados muestran que se puede estimar un proceso MA aproximándolo como un proceso AR. Un proceso AR puede ser estimado consistentemente a través de OLS.
+
+## Función Impulso Respuesta (IRF)
+
+La IRF es el cambio entre el valor esperado de una variable aleatoria condicionado sobre la realizaciones de la incertidumbre en un punto en el tiempo entre el corriente con respecto al futuro. Formalmente:
+
+\begin{equation}
+IRF=E_{t}x_{t+j}-E_{t-1}x_{t+j}\;\; \forall j\geq 0
+\end{equation}
+
+Si se tiene un proceso ARMA:
+
+\begin{align}
+x_{t}&=b(L)\epsilon_{t}\\ 
+E_{t}x_{t+1}&=E_{t}b(L)\epsilon_{t+1}=b(L)\epsilon_{t}\\
+\end{align}
+
+El anterior resultados es debido a que $E_{t}x_{t+j}=0\;\;\forall j>0$ lo que significa, usando la misma lógica que que $E_{t-1}x_{t+j}=0\;\;\forall j\geq 0$.
+
+En conclusión la IFR es $b(L)\epsilon_{t}$. La representación MA de un proceso es la IFR.
+
+
+
+
+
+# Vectores Autoregresivos (VAR)
 
 Un VAR consiste en un conjunto de k variables endógenas $Y_{t}=\{y_{1t},\cdots, y_{kt}\}$.
 
@@ -59,7 +133,7 @@ u_{t} \\
 
 Lo anterior no es otra cosa que un proceso AR(1), matricialmente:
 
-$x_t = Ax_{t−1} + Cw_t$
+$X_t = AX_{t−1} + Cw_t$
 
 Este proceso tiene los siguientes supuestos:
 
@@ -78,21 +152,18 @@ Es interesante por:
 2. Permite la discusión de quién causa a quién.
 
 
-Para una proceso AR(1) $y_{t}=\phi y_{t-1}+\epsilon_{t}$ el cual lo expresamos en MA($\infty$) como $y_{t}=\sum_{j=0}^{\infty}\phi^{j}  \epsilon_{t-j}$, su impulso respuesta es:
+Para una proceso AR(1) $x_{t}=p x_{t-1}+\epsilon_{t}$ el cual lo expresamos en MA($\infty$) como $x_{t}=\sum_{j=0}^{\infty}p^{j}  \epsilon_{t-j}$, su impulso respuesta es:
 
 
 $\begin{array}{cccccccc}
 \epsilon_{t} &\colon &0&0&1&0&0&0 \\
-x_{t}        &\colon &0&0&\phi&\phi^{2}&\phi^{3}&\cdots
+x_{t}        &\colon &0&0& p &p^{2}&p^{3}&\cdots
 \end{array}$
 
 ¿Por qué es importante definir un proceso como un MA$(\infty)$?
 
 1. La representación MA infinito de todo proceso es *la función impulso respuesta*
-2. La función impulso respuesta es equivalente a $E_{t}(x_{t+h})-E_{t-1}(x_{t+h})$ que no es otra cosa que el error de pronóstico hacia h pasos adelante.
-
-Noten que los pronósticos para horizontes $h\geq1$ de un proceso VAR(p) puede ser generado de manera recursiva.
-$x_{t+h/t} = A_{1}x_{t+h-1/t} + \cdots+A_{p}x_{t+h-p/t}$
+2. La función impulso respuesta es equivalente a $E_{t}(x_{t+j})-E_{t-1}(x_{t+j})$ que no es otra cosa que el error de pronóstico hacia j pasos adelante.
 
 
 ## Vectores autoregresivos estructurales
@@ -163,17 +234,336 @@ El sistema anterior puede escribirse de forma matricial como:
 	\right) 
 \end{equation} 
 
+Noten que para que sea un sistema estructural, es decir haya un fundamento económico que defina el orden de prelación de la variable exógena $\pi$ hacia la endógena $m$, $\alpha_{1,2}$ debe ser igual a cero. Por lo que el sistema podría ser escrito como:
+
+\begin{equation}
+	\left( \begin{array}{c}
+	\pi_{t} \\
+	  m_{t} 
+	\end{array}\right)=\left( \begin{array}{cc}
+ \beta_{1,1} & \beta_{1,2}\\
+ \omega_{\pi} & \omega_{m}
+	\end{array}
+	\right) \left( \begin{array}{c}
+	\pi_{t-1}\\
+	  m_{t-1}
+	\end{array}
+	\right) +
+\left( \begin{array}{cc}
+ \gamma_{e_{\pi}} & 0\\
+ \omega_{e_{\pi}} & 1
+	\end{array}
+	\right) \left( \begin{array}{c}
+	e_{\pi,t}\\
+	e_{m,t} 
+	\end{array}
+	\right) 
+\end{equation} 
+
 Expresándolo de forma matricial tenermos:
 
 \begin{equation}
 \label{e1}
-x_t = \Gamma x_{t−1} + Zw_t
+x_t = \Gamma x_{t−1} + Bw_t
 \end{equation}
 
 
-La ecuación anterior es la *forma estructural*. Sin embargo, cuando se estima el VAR se hace en su *forma reducida*, la que resulta trás premultiplicar por la matriz A:
+
+Reordenando:
+
+\begin{align}
+x_{t}-\Gamma x_{t−1} &=  Bw_t\\
+A(L)x_{t}&=  Bw_t
+\end{align}
+
+Donde $A(L)=I-AL$ con A:
+
 \begin{equation}
-\label{e2}
+A=\left( \begin{array}{cc}
+ \beta_{1,1} & \beta_{1,2}\\
+ \omega_{\pi} & \omega_{m}
+	\end{array}
+	\right)
+\end{equation}
+
+El sistema puede ser estimado de manera consistente y eficiente a través de OLS. La razón de la consistencia es que todos los regresores datan de t-1 (particularmente en este caso y en el caso general de t-1 hacia más atrás) mientras los errores datan en t. El término del error suele conocerse como imnovación. En tanto la estimación OLS es eficiente porque los regresores son los mismos en ambas ecuaciones (por lo que en este caso el método de estimación OLS coincide con el método Seemingly unrelated regressions (SUR)).
+
+En otros casos, por ejemplo, el caso entre el precio de las acciones (x) y el consumo (z), sus innovaciones $(e_{x,t}\;e_{z,t})$ están correlacionadas. En esa situación no existe una posible interpretación *estructural* de esas innovaciones. Pues éstas son afectadas por un *factor profundo*. Sin embargo, para efectos de pronóstico un VAR con esas variables no tiene importancia el desconocimiento de ese *factor profundo*. No obstante, para propósito de análisis económmico sí la tiene. Un VAR como el representado por las variables x y z es conocido como de *forma reducida* pues no es posible dar una interpretación *estructural* a sus innovaciones.
+
+El análisis de un VAR estructural (SVAR) presupone que las innovaciones representadas en el VAR $(e_{x,t}\;e_{z,t})$ son conducidas por un *factor profundo* ello es un *shock estructural*. De manera que existe una vinculación líneal entre ese shock estructural $(\epsilon_{t}=[\epsilon_{x,t}\;\;\;\epsilon_{z,t}])$ con las innovaciones de la forma reducida $(e_{t}=[e_{x,t}\;\;\;e_{z,t}])$:
+  
+  
+  \begin{equation}
+e_{t}=B\epsilon_{t}
+\end{equation}
+
+
+Sí $\Sigma_e=E(ee^{\tau})$ es la matriz de varianza y covarianza de la forma reducida, manipulando la ecuación anterior se tiene:
+  
+  \begin{equation}
+E(ee^{\tau})=BE(\epsilon\epsilon^{\tau})B^{\tau}
+\end{equation}
+
+Como ellas no están correlacionadas los elementos fuera de la diagonal de 
+$\Sigma_\epsilon=E(\epsilon\epsilon^{\tau})$ son cero, y si normalizamos cada uno de los shocks estructurales haciendo que sean igual a la unidad, se tendrían que $\Sigma_\epsilon=E(\epsilon\epsilon^{\tau})=I$. Por tanto la ecuación anterior se expresa como:
+  
+\begin{equation}
+E(ee^{\tau})=BB^{\tau}
+\end{equation}
+
+Lo anterior nos lleva a un sistema de ecuaciones que sin algún supuesto estaría indeterminado. Pues para el caso de dos variables existen 4 elementos únicos en la matriz B y 4 elmentos únicos en la matriz $BB^{\tau}$. Pero en la matriz $\Sigma_e$ solo existen tres elementos únicos, pues una matriz de varianza y covarianza es simétrica. En conclusión sin imponer un supuesto sobre la matriz B no es posible la identificación.
+
+En el caso general de un VAR con n variables, existen n innovaciones, la matriz de varianza y covarianza de esas n innovaciones tendrían $n^{2}$ elementos, pero de los cuales solo $\frac{n^{2}+n}{2}$ serían únicos. Dado que $BB^{\tau}$ tendría $n^{2}$ elementos se requiere que tenga $\frac{n^{2}+n}{2}$ elementos únicos para que el sistema sea identificado, lo que significa imponer $\frac{n(n-1)}{2}$ restricciones. En el caso de n=2 implica imponer sobre B una sola restricción.
+
+
+Las restricciones que se impongan *deben provenir de la teoría económica.* Las restricciones que más suelen utilizarse son las del tipo recursivas, ello son las que hacen un supuesto sobre la temporalidad en que algunos shocks solo afectan a ciertas variables con un rezago. Lo anterior implica que algunos elementos en la matriz B son ceros. En el último ejemplo suponga que $\epsilon_{z,t}$ no afectan $x_{t}$ haciendo que el elmento (1,2) en la matriz B sea cero. Con esa restricción los tres elementos restantes de la matriz B pueden ser identificados desde la matriz de varianza y covarianza de los errores en su forma reducida.
+
+¿Son las restricciones del tipo recursiva ciertas en la realidad? Aveces. En la literatura de política monetaria es común pensar que los shocks de esa políticas afectan a la economía con rezago. Supongamos un VAR entre la tasa del fed fund y la tasa de crecimiento real del PIB de USA, $Y_{t}=[i_{t}\;\; \Delta y_{t}]$. Se podría interpretar como que $\epsilon_{i,t}$ es un shock de política monetaria, mientras $\epsilon_{\Delta y,t}$ es un shock de oferta. Bajo estos supuestos la posición (2, 1) en la matriz B es cero. 
+
+Una vez identificado un SVAR, lo que interesa es conocer la función impulso respuesta y la descomposición de la varianza, esto significa que lo que interesa es la dinámica de las variables ante un shock. Como se dijo anteriormente la IFR es la representación MA de un proceso ARMA:
+
+\begin{equation}
+A(L)Y_{t}=B\epsilon_{t}
+\end{equation}
+
+Si se invierte el proceso AR y definimos $C(L)=A(L)^{-1}B$ ésta sería la matriz de polinomios con los coeficientes de media móviles estructurales. Es importante notar que la matriz B es la que gobierna los impulsos-respuestas por esa razón se conoce como la matriz de impacto.
+
+\begin{equation}
+Y_{t}=A(L)^{-1}B\epsilon_{t}=C(L)\epsilon_{t}
+\end{equation}
+
+Para encontrar la IRF definimos $C_{i,j}(h)$ la respuesta de la variable i ante un shock en la variable j en el horizonte h.
+
+El error de pronóstico de una variable en el período t es el cambio en la variable que no pudo ser pronósticado entre el período t-1 y t. Ello se debe a la realización de los shocks estructurales en un sistema ($\epsilon_{t}$). Es posible computar el error de pronóstico para muchos horizontes h. El error de pronóstico en h=0 para cada variable en nuestro sistema es:
+
+\begin{align}
+E_{t}\Delta y_{t}-E_{t-1}\Delta y_{t}&=C_{1,1}(0)\epsilon_{\Delta y, t}+C_{1,2}(0)\epsilon_{i, t}\\
+E_{t}i_{t}-E_{t-1}i_{t}&=C_{2,1}(0)\epsilon_{\Delta y, t}+C_{2,2}(0)\epsilon_{i, t}
+\end{align}
+
+La varianza del error de pronóstico es su cuadrado. Si se define $\Omega_{i}(h)$  como la varianza del error de pronóstico de la variable i en el horizonte h. Entonces su calculo en h=0 es simple:
+
+
+\begin{align}
+\Omega_{\Delta y}(0)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}\\
+\Omega_{i}(0)       &=C_{2,1}(0)^{2}+C_{2,2}(0)^{2} 
+\end{align}
+
+Lo anterior sigute el supuesto que el shock tiene varianza unitaria y no están correlacionadas. El error de pronósticos para estas variables en el horizonte h=1 es:
+
+\begin{align}
+E_{t}\Delta y_{t+1}-E_{t-1}\Delta y_{t+1}&=C_{1,1}(0)\epsilon_{\Delta y, t+1}+C_{1,2}(0)\epsilon_{i, t+1}+C_{1,1}(1)\epsilon_{\Delta y, t}+C_{1,2}(1)\epsilon_{i, t}\\
+E_{t}i_{t+1}-E_{t-1}i_{t+1}&=C_{2,1}(0)\epsilon_{\Delta y, t+1}+C_{2,2}(0)\epsilon_{i, t+1}+C_{2,1}(1)\epsilon_{\Delta y, t}+C_{2,2}(1)\epsilon_{i, t}
+\end{align}
+
+Y la varianza del error de pronóstico sería:
+
+\begin{align}
+\Omega_{\Delta y}(1)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}+C_{1,1}(1)^{2}+C_{1,2}(1)^{2}\\
+\Omega_{i}(1)       &=C_{2,1}(0)^{2}+C_{2,2}(0)^{2}+C_{2,1}(1)^{2}+C_{2,2}(1)^{2}  
+\end{align}
+
+Es posible definir la varianza del error de pronóstico de manera *recursiva* para disponerse por más períodos:
+
+\begin{align}
+\Omega_{\Delta y}(0)&=C_{1,1}(0)^{2}+C_{1,2}(0)^{2}\\
+\Omega_{\Delta y}(1)&=C_{1,1}(1)^{2}+C_{1,2}(1)^{2}+\Omega_{\Delta y}(0)\\
+\vdots              &    \vdots\\
+\Omega_{\Delta y}(h)&=C_{1,1}(h)^{2}+C_{1,2}(h)^{2}+\Omega_{\Delta y}(h-1)
+\end{align}
+
+
+De manera más general para un VAR de n variables, la varianza total del error de pronóstico de la variable i está dado por:
+
+\begin{equation}
+\Omega_{i}(h)=\sum_{k=0}^{h} \sum_{j=1}^{n}C_{i,j}(k)^{2}
+\end{equation}
+
+*La descomposición de la varianza del error de pronóstico*, es la manera de cuantificar que tan importante es cada shock en explicar la varianción que experimenta cada una de las variables en un sistema VAR. Esto es igual a la fracción de la varianza del error de pronósitico de cada variable dado cada uno de los shock en cada uno de los horizontes. Específicamemte, si definimos $\omega_{i,j}(h)$ como la varianza en el error de pronóstico de la variable i ante un shock en la variable j en el horizonte h, se tiene:
+
+
+\begin{equation}
+\omega_{i, j}(h)=\sum_{k=0}^{h} C_{i,j}(k)^{2}
+\end{equation}
+
+La fracción de la varianza del error de pronóstico de la variable i dado por el shock en la variable j en el horizonte h denotado por $\phi_{i,j}(h)$ es lo de arriba dividido por la varianza total del error de pronóstico:
+
+\begin{equation}
+\phi_{i,j}(h)=\frac{\omega_{i, j}(h)}{\Omega_{i}(h)}=\frac{\sum_{k=0}^{h} C_{i,j}(k)^{2}}{\sum_{k=0}^{h} \sum_{j=1}^{n}C_{i,j}(k)^{2}}
+\end{equation}
+
+
+
+## Aplicación
+
+@Cochrane94 estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios ($c_{t}$) y el PIB real (y_{t}). Introduciendo 2 rezago el VAR se expesa como:
+
+\begin{align}
+c_{t}&= a_{c}+\beta_{1,1}^{c}c_{t-1}+\beta_{1,2}^{c}y_{t-1}+\beta_{2,1}^{c}c_{t-2}+\beta_{2,2}^{c}y_{t-2}+e_{c,t}\\
+y_{t}&= a_{y}+\beta_{1,1}^{y}c_{t-1}+\beta_{1,2}^{y}y_{t-1}+\beta_{2,1}^{y}c_{t-2}+\beta_{2,2}^{y}y_{t-2}+e_{y,t}
+\end{align}
+
+Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente estimación:
+
+
+```r
+library(quantmod)
+library(dplyr)
+library(stargazer)
+getSymbols(c("PCENDC96", "PCESC96", "GDPC1"),
+           src = "FRED")
+```
+
+```
+## [1] "PCENDC96" "PCESC96"  "GDPC1"
+```
+
+```r
+C<-PCENDC96+PCESC96
+ep_c       <-endpoints(C, on = "quarters")
+C          <-period.apply(C , INDEX = ep_c, FUN = last)
+GDPC1      <-merge(GDPC1, index(C), join="outer")
+GDPC1      <-cbind(na.locf(GDPC1, fromLast = FALSE))
+BASE       <-merge(C, GDPC1, join="left")
+BASE       <-data.frame(date=index(BASE), coredata(BASE))
+colnames(BASE)<-c("date","C", "Y")
+BASE    <-mutate(BASE, DC       =  C-lag(C, n=4))
+BASE    <-mutate(BASE, c        = (DC/(lag(C, n=4)))*1)
+BASE    <-mutate(BASE, DY       =  Y-lag(Y, n=4))
+BASE    <-mutate(BASE, y        = (DY/(lag(Y, n=4)))*1)
+DATA    <-dplyr::select(BASE, date, c, y)
+DATA    <-filter(DATA, date >= "2003-03-01")
+DATA       <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
+library("svars")
+VAR_1      <- vars::VAR(DATA, p = 2, type = 'const')
+VAR_1$varresult$y$coefficients
+```
+
+```
+##         c.l1         y.l1         c.l2         y.l2        const 
+##  1.299144187  0.178352073 -1.429590045  0.604256673  0.006285347
+```
+
+```r
+VAR_1$varresult$c$coefficients
+```
+
+```
+##         c.l1         y.l1         c.l2         y.l2        const 
+##  0.975774352  0.010371371 -0.651664645  0.313857444  0.005744135
+```
+
+```r
+SIGMA<-summary(VAR_1)
+SIGMA$covres
+```
+
+```
+##              c            y
+## c 0.0001952119 0.0001018477
+## y 0.0001018477 0.0001333163
+```
+
+De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente $\epsilon_{1,t}$  y del ingreso transitorio $\epsilon_{2,t}$. La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que $B_{1,2}=0$.
+
+
+
+```r
+B <- matrix(rep(NA, 4), ncol = 2)
+B[1, 2] <- 0
+SVAR_1  <- SVAR(VAR_1, estmethod="direct", Bmat = B)
+SVAR_1$B 
+```
+
+```
+##             c           y
+## c 0.013972801 0.000000000
+## y 0.007289874 0.008953255
+```
+
+Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
+
+
+```r
+FIR_1 <- irf(SVAR_1,n.ahead = 20, impulse = c("c","y"), boot =FALSE)
+RESULTADO<-as.data.frame(FIR_1$irf$c)
+PERIODO<-seq(1,21,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+CODE<-rep("consumo",21)
+RESULTADO <-cbind(RESULTADO,CODE)
+#####################################
+RESULTADO2<-as.data.frame(FIR_1$irf$y)
+RESULTADO2 <-cbind(RESULTADO2,PERIODO)
+CODE<-rep("producto",21)
+RESULTADO2 <-cbind(RESULTADO2,CODE)
+RESULTADO <-rbind(RESULTADO,RESULTADO2)
+
+####HACER MI PROPIO GRÁFICO###################
+library(tidyr)
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",
+                    c("c", "y"))
+
+BASE_LONG$measure <- factor(BASE_LONG$measure,
+                            levels = c("c","y"))
+
+variable_names <- list(
+  "c" = "Respuesta del consumo",
+  "y" = "Respuesta del producto"
+)
+variable_labeller2 <- function(variable,value){
+  if (variable=='measure') {
+    return(variable_names[value])
+  } else {
+    return(region_names)
+  }
+}
+
+paleta<-c("blue", "red")
+library(ggplot2)
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = CODE,
+                         colour=CODE))+
+  facet_wrap(.~measure, scales="free", labeller= variable_labeller2)
+Z<-Z+labs(y="Respuesta",
+          x="Períodos")+
+  geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)+
+  geom_line(size=1.5)+
+  scale_color_manual(values=paleta,
+                     labels = c("Shock permanente", 
+                                "Shock transitorio"))
+Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12),
+           panel.grid.minor = element_blank(),
+           panel.grid.major.y = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           legend.key=element_rect(fill = "white", colour = "white",
+                                   color = "white", inherit.blank = FALSE),
+           legend.title = element_blank(),
+           legend.text  = element_text(size=10),
+           legend.position="bottom",
+           legend.spacing.x = unit(0.10, 'cm'),
+           legend.margin=margin(),
+           legend.background = element_rect(fill = "white", colour = "transparent",
+                                            color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+Z
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-3-1.png)<!-- -->
+
+El impulso respuesta mostrado en la figura anterior es consistente con la teoría, pues se observa como el consumo se mueve poco ante un shock transitorio. La descomposición de la varianza por su parte revela:
+
+
+
+
+La ecuación anterior es la *forma estructural*. Sin embargo, cuando se estima el VAR se hace en su *forma reducida*, la que resulta trás premultiplicar por la matriz A:
+
+\begin{equation}
 Ax_t = A\Gamma x_{t−1} + Bw_t
 \end{equation}
 
@@ -489,7 +879,7 @@ P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
 P
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-5-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-8-1.png)<!-- -->
 
 Finalmente, podemos observar la descomposición de la varianza de la variable $\pi$:
 
@@ -534,7 +924,7 @@ Z<-Z+theme_classic()+theme(
 Z
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-6-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-9-1.png)<!-- -->
 
 A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -547,7 +937,7 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-7-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-10-1.png)<!-- -->
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función *id.cv()* la cual introduce el *cambio en la varianza* que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento *SB* en formato *ts*:
 
@@ -798,7 +1188,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-15-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-18-1.png)<!-- -->
 
 El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta. 
 
@@ -820,7 +1210,7 @@ fev.cv <- fevd(usa.cv, n.ahead = 48)
 plot(fev.cv)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-16-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-19-1.png)<!-- -->
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
 error al cuadrado.

@@ -1,7 +1,10 @@
 introducción
-el-modelo-de-vectores-autoregresivos-var
+proceso-arma
+función-impulso-respuesta-irf
+vectores-autoregresivos-var
 función-impulso-respuesta
 vectores-autoregresivos-estructurales
+aplicación
 ortogonalización
 supuestos-de-ortogonalización
 ortogonalización-de-sims
