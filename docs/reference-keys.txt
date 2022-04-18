@@ -4,10 +4,10 @@ función-impulso-respuesta-irf
 vectores-autoregresivos-var
 función-impulso-respuesta
 vectores-autoregresivos-estructurales
-aplicación
-ortogonalización
-supuestos-de-ortogonalización
+aplicación-cochrane94
 ortogonalización-de-sims
+blanchard-quah-ortogonalización-restricciones-sobre-c1
+aplicación-blanchard88
 paquetes-en-r
 paquete-svars
 bla-bla

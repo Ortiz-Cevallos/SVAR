@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-04-04"
+date: "2022-04-18"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -394,9 +394,9 @@ La fracción de la varianza del error de pronóstico de la variable i dado por e
 
 
 
-## Aplicación
+## Aplicación @COCHRANE94
 
-@Cochrane94 estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios ($c_{t}$) y el PIB real (y_{t}). Introduciendo 2 rezago el VAR se expesa como:
+@COCHRANE94 estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios ($c_{t}$) y el PIB real (y_{t}). Introduciendo 2 rezago el VAR se expesa como:
 
 \begin{align}
 c_{t}&= a_{c}+\beta_{1,1}^{c}c_{t-1}+\beta_{1,2}^{c}y_{t-1}+\beta_{2,1}^{c}c_{t-2}+\beta_{2,2}^{c}y_{t-2}+e_{c,t}\\
@@ -409,6 +409,7 @@ Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente 
 ```r
 library(quantmod)
 library(dplyr)
+library(stats)
 library(stargazer)
 getSymbols(c("PCENDC96", "PCESC96", "GDPC1"),
            src = "FRED")
@@ -422,26 +423,27 @@ getSymbols(c("PCENDC96", "PCESC96", "GDPC1"),
 C<-PCENDC96+PCESC96
 ep_c       <-endpoints(C, on = "quarters")
 C          <-period.apply(C , INDEX = ep_c, FUN = last)
+C          <-diff(log(C), lag=4)
+#C          <-log(C)
+GDPC1      <-diff(log(GDPC1), lag=4)
+#GDPC1      <-log(GDPC1)
 GDPC1      <-merge(GDPC1, index(C), join="outer")
 GDPC1      <-cbind(na.locf(GDPC1, fromLast = FALSE))
 BASE       <-merge(C, GDPC1, join="left")
 BASE       <-data.frame(date=index(BASE), coredata(BASE))
 colnames(BASE)<-c("date","C", "Y")
-BASE    <-mutate(BASE, DC       =  C-lag(C, n=4))
-BASE    <-mutate(BASE, c        = (DC/(lag(C, n=4)))*1)
-BASE    <-mutate(BASE, DY       =  Y-lag(Y, n=4))
-BASE    <-mutate(BASE, y        = (DY/(lag(Y, n=4)))*1)
-DATA    <-dplyr::select(BASE, date, c, y)
+DATA    <-dplyr::select(BASE, date, C, Y)
+colnames(DATA)<-c("date", "c", "y")
 DATA    <-filter(DATA, date >= "2003-03-01")
 DATA       <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
 library("svars")
-VAR_1      <- vars::VAR(DATA, p = 2, type = 'const')
+VAR_1      <- vars::VAR(DATA, p = 1, type = 'const')
 VAR_1$varresult$y$coefficients
 ```
 
 ```
-##         c.l1         y.l1         c.l2         y.l2        const 
-##  1.299144187  0.178352073 -1.429590045  0.604256673  0.006285347
+##         c.l1         y.l1        const 
+##  1.031021984 -0.139087357  0.004025386
 ```
 
 ```r
@@ -449,8 +451,8 @@ VAR_1$varresult$c$coefficients
 ```
 
 ```
-##         c.l1         y.l1         c.l2         y.l2        const 
-##  0.975774352  0.010371371 -0.651664645  0.313857444  0.005744135
+##         c.l1         y.l1        const 
+##  0.846092193 -0.115153170  0.005142927
 ```
 
 ```r
@@ -460,8 +462,8 @@ SIGMA$covres
 
 ```
 ##              c            y
-## c 0.0001952119 0.0001018477
-## y 0.0001018477 0.0001333163
+## c 0.0002165772 0.0001608193
+## y 0.0001608193 0.0002722802
 ```
 
 De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente $\epsilon_{1,t}$  y del ingreso transitorio $\epsilon_{2,t}$. La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que $B_{1,2}=0$.
@@ -476,9 +478,9 @@ SVAR_1$B
 ```
 
 ```
-##             c           y
-## c 0.013972801 0.000000000
-## y 0.007289874 0.008953255
+##            c          y
+## c 0.01471658 0.00000000
+## y 0.01092775 0.01236545
 ```
 
 Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
@@ -560,147 +562,101 @@ El impulso respuesta mostrado en la figura anterior es consistente con la teorí
 
 
 
+```r
+RESULTADO<-as.data.frame(fevd(VAR_1, n.ahead = 20)$c)
+PERIODO<-seq(1,20,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+CODE<-rep("permanente",20)
+RESULTADO <-cbind(RESULTADO,CODE)
+#####################################
+RESULTADO2<-as.data.frame(fevd(VAR_1, n.ahead = 20)$y)
+RESULTADO2 <-cbind(RESULTADO2,PERIODO)
+CODE<-rep("transitorio",20)
+RESULTADO2 <-cbind(RESULTADO2,CODE)
+RESULTADO <-rbind(RESULTADO,RESULTADO2)
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",
+                    c("c","y"))
 
-La ecuación anterior es la *forma estructural*. Sin embargo, cuando se estima el VAR se hace en su *forma reducida*, la que resulta trás premultiplicar por la matriz A:
+BASE_LONG$CODE <- factor(BASE_LONG$CODE,
+                            levels = c("permanente","transitorio"))
 
-\begin{equation}
-Ax_t = A\Gamma x_{t−1} + Bw_t
-\end{equation}
+variable_names <- list(
+  "permanente" =  "Varianza del consumo",
+  "transitorio" = "Varianza del producto"
+)
+variable_labeller2 <- function(variable,value){
+  if (variable=='CODE') {
+    return(variable_names[value])
+  } else {
+    return(region_names)
+  }
+}
 
+paleta<-c("blue", "red")
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = measure,
+                         fill=measure))+
+  facet_wrap(.~CODE, scales="free", labeller= variable_labeller2)
+Z<-Z+labs(y="Porcentaje",
+          x="Períodos")+
+  geom_bar(stat='identity')+
+  scale_fill_manual(values=paleta,
+                     labels = c("Shock permanente", 
+                                "Shock transitorio"))
+Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12),
+           panel.grid.minor = element_blank(),
+           panel.grid.major.y = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           legend.key=element_rect(fill = "white", colour = "white",
+                                   color = "white", inherit.blank = FALSE),
+           legend.title = element_blank(),
+           legend.text  = element_text(size=10),
+           legend.position="bottom",
+           legend.spacing.x = unit(0.10, 'cm'),
+           legend.margin=margin(),
+           legend.background = element_rect(fill = "white", colour = "transparent",
+                                            color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+Z
+```
 
-Si asumimos que los *errores estructurales* que integran el vector $w_{t}$ son ruido blanco, y que los coeficientes en la matriz $\Gamma$ son *estructurales* los cuales difieran de sus contrapartes en su forma reducida. 
-
-Para ver lo anterior, multiplicamos la ecuación anterior por $A^{-1}$:
-
-\begin{align}
-x_t &= A^{-1}A\Gamma x_{t−1} + A^{-1}Bw_t\\
-x_t &= \Gamma x_{t−1} + \eta_t
-\end{align}
-
-Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B. 
-
-Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida:
-
-\begin{equation}
-Ax_t = A\Gamma x_{t−1} + Bw_t
-\end{equation}
-
-Donde solo se pueden agregar restricciones para A y B. Además los residuos en su  forma reducida se puede recuperar de un modelo SVAR por $\eta_t=A^{-1}Bw_t=Qw_t$ y su matriz de varianza-covarianza es $\Sigma_\eta=A^{-1}B\Sigma_{w}B^{\tau}(A^{-1})^{\tau}=Q\Sigma_{w}Q^{\tau}=QQ^{\tau}$.
-
-De manera que el impulso respuesta de este modelo ante un shock estrutural en ($w_t$) viene dado por:
-
-$\begin{array}{ccccccccc}
-w_{t} &\colon &0&0&I&0&0&0&0 \\
-x_{t}        &\colon &0&0&A^{-1}B&B&AB&A^{2}B&\cdots
-\end{array}$
-
-Es posible distinguir tres tipos de SVAR según se impongan las restricciones:
-
-1. *Modelo A* La matriz B corresponde a $I_{k}$ lo que implica que el número mínimo de restricciones para su identificación es $k\frac{(k-1)}{2}$
-
-2. *Modelo B* La matriz A corresponde a $I_{k}$ lo que implica que el número mínimo de restricciones para su identificación es $k\frac{(k-1)}{2}$
-
-3. *Modelo AB* Las restricciones pueden ser impuestas en ambas matrices siendo el número mínimo de restricciones para su identificación es $k^{2}+k\frac{(k-1)}{2}$
-
-## Ortogonalización
-
-La función impulso respuesta de un VAR es ligeramente ambigua.
-
-Sabemos que podemos representar cualquier serie de tiempo como una *arbitraria* combinación lineal de un conjunto de funciones de impulso respuestas.
-
-Entonces la *Ortogonalización* se refiere al proceso de seleccionar uno de las posibles funciones de impulsos respuestas que sea más interesante para el análisis económico. 
-
-Si definimos la matriz $A^{*}$ en función del operador de rezagos:
-\begin{equation}
-A^{*}=\left( \begin{array}{cccc}
-L      & NA  & \cdots & NA\\
-\beta_{1,2} & L   &        & NA\\
-\vdots &     & \ddots & NA\\
-\beta_{1,k} & \beta_{2,k}   & \cdots & L\\
-\end{array}
-\right)
-\end{equation}
-
-Un VAR expresado en notación vectorial estaría dado:
-
-\begin{align}
-A^{*}(L)x_{t}&=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
-\end{align}    
-
-Si definimos la matriz B en función de sus rezagos:
-\begin{equation}
-B^{*}=\left( \begin{array}{cccc}
-L      & NA  & \cdots & NA\\
-\Phi_{1,2} & L   &        & NA\\
-\vdots &     & \ddots & NA\\
-\Phi_{1,k} & \Phi_{2,k}   & \cdots & L\\
-\end{array}
-\right)
-\end{equation}
+![](01-conceptos_files/figure-epub3/unnamed-chunk-4-1.png)<!-- -->
 
 
-En notación MA se escribe:
-
-\begin{align}
-x_{t}&=B^{*}(L)w_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
-\end{align}   
-
-
-
-Donde $B^{*}(L)=A^{*}(L)^{-1}$, siendo $B^{*}(L)$ la respuesta de $x_{t}$ a una unidad de impulso de cada elemento de $e_{t}$    
-
-Ahora supongase que queremos calcular la respuesta de $x_{t}$ a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de $x_{t}$ de un schocks tal que: $\eta_{1t}=e_{\pi t}$ y  $\eta_{2t}=5e_{\pi t}+e_{mt}$ ó:
-\begin{equation}
-\eta_{t}=Qw_t,\;\;Q=\left( \begin{array}{cc}
-    1 & 0\\
-    5 & 1
-\end{array}
-\right) \nonumber
-\end{equation} 
-
-Con ello podemos reescribir el VAR en notación MA:
-\begin{align}
-x_{t}&=C(L)\eta_{t},\;\;C(L)=B^{*}(L)Q^{-1}
-\end{align}
-
-Donde C(L) representa la respuesta de $x_{t}$ a los schocks $\eta_{t}$, ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales $B^{*}(L)$.
-
-Pero ¿Qué combinación lineal deberíamos observar?
-
-Es de notar que los datos no nos pueden ayudar ya que tanto la representación $x_{t}=B^{*}(L)w_{t}$ y $x_{t}=C(L)\eta_{t}$ son equivalentes y producen las mismas series. 
-
-Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados *supuestos de ortogonalización*.
-
-## Supuestos de Ortogonalización
-
-El primero y quizás el más popular supuesto es que los shocks son ortogonales  (no están correlacionados).
-
-Si dos shocks $e_{\pi t}$ y $e_{mt}$ están correlacionados entonces no tiene sentido preguntarse, ¿qué pasa si $e_{\pi t}$ se impulsa en una unidad?, pues obviamente también se estaría moviendo $e_{mt}$  al mismo tiempo.
-
-Un ejemplo concreto, nosotros queremos saber la función impulso respuesta en términos causales, es decir el *efecto* de la inflación en el precio de las manzanas. Pero si el shock de la inflación está correlacionado al shock del precio de las manzanas, no podemos saber si lo que estamos viendo como respuesta del precio de las manzanas  se debe a un shock de inflación ó es debido a un shock en la  oferta de las manzanas.
-    
-Adicionalmente es conveniente reescalar el shock para que este se exprese en unidades de la varianza de las series.
-
-El supuesto de shocks ortogonales busca encontrar una matriz Q, tal que $E(\eta_{t}\eta_{t}^{'})=I$. Por lo cual:
-
-\begin{align}
-Q^{-1}Q^{-1'}&=\Sigma_{\eta} \\
-E(\eta_{t}\eta_{t}^{'})&=E(Qw_{t}w_{t}^{'}Q^{'})=Q\Sigma_{w} Q^{'}=I\nonumber
-\end{align}    
-
-
+El gráfico anterior también confirma la teoría básica. El consumo es completamente explicado por los shocks permanentes. Una significativa fracción de los movimientos en el producto en el corto plazo obedecen a shocks transitorios, en horizontes largo los shocks permanentes se hacen más relevantes.
 
 ## Ortogonalización de Sims
 
-Una vía de construir la matriz Q es por la descomposición de Choleski.
+Es de notar que los datos, por sí solos, no nos pueden ayudar ya que tanto el proceso $x_{t}=C(L)\epsilon_{t}$ como el proceso $x_{t}=A(L)^{-1}e_{t}$ son equivalentes y producen las mismas series. 
 
-Desafortunadamente existen muchas matrices Q que pueden hacer cumplir la identidad $E(\eta_{t}\eta_{t}^{'})=I$, entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizara la teoría económica para especificar C(0) y C(1).
+Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados *supuestos de ortogonalización*.
 
-Sims sugiere que se especifica las propiedades de C(0).
+Recordemos que existe una vinculación líneal entre el shock estructural $(\epsilon_{t}=[\epsilon_{x,t}\;\;\;\epsilon_{z,t}])$ con las innovaciones de la forma reducida $(e_{t}=[e_{x,t}\;\;\;e_{z,t}])$:
+  
+  
+\begin{equation}
+e_{t}=B\epsilon_{t}
+\end{equation}
 
-Enfatizando el hecho de que sólo en el caso en que $\Sigma_{w}$ sea diagonal, cualquier diagonalización de la matriz Q debería tener elementos en la posición no diagonal y por tanto $C(0)\neq I$, implicando que algún shocks debería tener efecto contemporáneo en más de una variable.
 
-En especifico Sims sugiere escoger una matriz triangular inferior C(0) tal que:
+Sí $\Sigma_e=E(e e^{\tau})$ es la matriz de varianza y covarianza de la forma reducida, y $\Sigma_\epsilon=E(\epsilon \epsilon^{\tau})=I$ es la matriz identidad se tiene:
+  
+\begin{align}
+\Sigma_e&=BB^{\tau}\\
+B^{-1}\Sigma_eB^{-1\tau}&=I\\
+Q\Sigma_eQ^{\tau}&=I
+\end{align}
+
+Una forma de construir la matriz Q es a través de la descomposición de Cholesky
+
+Desafortunadamente existen muchas matrices Q que pueden hacer cumplir la identidad $Q\Sigma_eQ^{\tau}=I$, entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizará la teoría económica para especificar C(0) y C(1).
+
+@Sims802 sugiere que se específique las propiedades de C(0), enfatizando el hecho de que $A(0)=I$. En especifico sugiere escoger una matriz triangular inferior C(0) tal que:
 
 \begin{equation}
 	\left( \begin{array}{c}
@@ -711,13 +667,13 @@ En especifico Sims sugiere escoger una matriz triangular inferior C(0) tal que:
 	C_{0m  \pi} & C_{0mm}
 	\end{array}
 	\right) \left( \begin{array}{c}
-	\eta_{1t}\\
-	\eta_{2t}
+	\epsilon_{1t}\\
+	\epsilon_{2t}
 	\end{array}
-	\right) +C_{1}\eta_{t-1}+\cdots
+	\right) +C_{1}\epsilon_{t-1}+\cdots
 \end{equation} 
 
-La matriz triangular inferior C(0) implica que $\pi_{t}$  aparece en la ecuación de $m_{t}$, pero $m_{t}$ no en la ecuación de $\pi_{t}$. Para observar lo anterior podemos representar el sistema dado por la ecuación anterior como un proceso autorregresivo y ortogonalizado: $D(L)x_{t}=\eta_{t}$, donde $D(L)=C(L)^{-1}$; recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:
+La matriz triangular inferior C(0) implica que $\pi_{t}$  aparece en la ecuación de $m_{t}$, pero $m_{t}$ no en la ecuación de $\pi_{t}$. Para observar lo anterior podemos representar el sistema dado por la ecuación anterior como un proceso autorregresivo y ortogonalizado: $D(L)x_{t}=\epsilon_{t}$, donde $D(L)=C(L)^{-1}$; recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:
 
 \begin{equation}
       \left( \begin{array}{cc}
@@ -728,29 +684,227 @@ La matriz triangular inferior C(0) implica que $\pi_{t}$  aparece en la ecuació
       \left( \begin{array}{c}
       \pi_{t} \\
        m_{t} 
-      \end{array}\right)+D_{1}x_{t-1}+\cdots=\eta_{t}\nonumber
+      \end{array}\right)+D_{1}x_{t-1}+\cdots=\epsilon_{t}\nonumber
 \end{equation}   
       
  Es de notar que la sugerencia de Sims es equivalente a estimar un sistema $(\pi_{t}, m_{t})$ por OLS, en que la ecuación de $m_{t}$ tenga como regresor  $\pi_{t}$, pero no viceversa y escalando cada ecuación para que la varianza del error sea 1.
 
 \begin{align}
-\pi_{t}&=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1\pi \pi}\pi_{t-1}+\cdots+\alpha_{1\pi m}m_{t-1}+\cdots+\eta_{1t}\nonumber \\
-m_{t}&=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_{t-1}+\cdots +\eta_{2t}\nonumber
+\pi_{t}&=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1\pi \pi}\pi_{t-1}+\cdots+\alpha_{1\pi m}m_{t-1}+\cdots+\epsilon_{1t}\nonumber \\
+m_{t}&=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_{t-1}+\cdots +\epsilon_{2t}\nonumber
 \end{align}
 
-En resumen se puede unicamente especificar la matriz Q como una combinación lineal de los shocks originales $(w_{t})$ y elaborar los impulsos respuesta de acuerdo a:
+En resumen se puede unicamente especificar la matriz B como una combinación lineal de los shocks originales $(\epsilon_{t})$ y elaborar los impulsos respuesta de acuerdo a:
 
 
-1. El error $(w_{t})$ son ortogonales.
+1. El error $(\epsilon_{t})$ son ortogonales.
 2. Que la respuesta instantánea de una variable a un shock es cero, siendo este al caso de estimar un VAR por OLS con efecto contemporaneo de $\pi$ sobre m y no viceversa.
 
-Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior Q:
+Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior B:
 \begin{align}
-C(0)&=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
+C(0)&=A(0)^{-1}B=IB=B \nonumber\\
 \end{align}
 
 Entonces lo importante es decidir el orden de prelación *De lo exógeno a lo endógeno* de las variables en el VAR; auxiliándose de la teoría económica.
 
+## Blanchard-Quah ortogonalización (restricciones) sobre C(1)
+
+@BLANCHARD88 definen un modelo partiendo del mismo supuesto en que $e_{t}=B\epsilon_{t}$ por lo que se tiene: 
+
+\begin{align}
+A(L)(1-\phi)x_{t}&=e_{t}\\
+A(0)(1-\phi)x_{t}&=B\epsilon_{t}\\
+A(L)x_{t}&=(1-\phi)^{-1}B\epsilon_{t}\\
+\end{align}
+
+Donde $C(1)=(1-\phi)^{-1}B=A(1)B$ por los que se tiene:
+
+\begin{align}
+(1-\phi)\Sigma_{e}(1-\phi)&=BB^{\tau}\\
+Q(1-\phi)\Sigma_e(1-\phi)Q^{\tau}&=I\\
+\end{align}
+
+De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock. 
+
+
+
+## Aplicación @BLANCHARD88
+
+@BLANCHARD88 argumentan que los shocks de demanda no tienen efectos en el largo plazo sobre el producto nominal. Para ello se requiere que C(1) sea una matriz triangular inferior en un VAR donde el producto nominal sea la variable exógena. 
+
+
+```r
+getSymbols(c("GDP", "UNRATE"),
+           src = "FRED")
+```
+
+```
+## [1] "GDP"    "UNRATE"
+```
+
+```r
+ep_U       <-endpoints(UNRATE, on = "quarters")
+U          <-period.apply(UNRATE, INDEX = ep_U, FUN = last)
+#U          <-U[-1]
+U          <-U-mean(U,na.rm=TRUE)
+Y          <-diff(100*log(GDP), lag=1)
+#Y          <-Y-mean(Y,na.rm=TRUE)
+Y          <-merge(Y, index(U), join="outer")
+Y          <-cbind(na.locf(Y, fromLast = FALSE))
+BASE       <-merge(U, Y, join="left")
+BASE       <-data.frame(date=index(BASE), coredata(BASE))
+colnames(BASE)<-c("date","U", "Y")
+DATA    <-dplyr::select(BASE, date, Y, U)
+colnames(DATA)<-c("date", "y", "u")
+DATA    <-filter(DATA, date >= "1951-06-01")
+DATA    <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
+library("svars")
+VAR_2      <- vars::VAR(DATA, p = 4, type = 'none')
+VAR_2$varresult$y$coefficients
+```
+
+```
+##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
+##  0.35103276  0.64950669  0.37665552 -0.12295317  0.19998463 -0.13713731 
+##        y.l4        u.l4 
+##  0.01638701 -0.25960029
+```
+
+```r
+VAR_2$varresult$u$coefficients
+```
+
+```
+##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
+## -0.11043586  0.87198140  0.01998763  0.20230286  0.07495755 -0.01065473 
+##        y.l4        u.l4 
+##  0.02375368 -0.14644337
+```
+
+```r
+SIGMA<-summary(VAR_2)
+SIGMA$covres
+```
+
+```
+##            y          u
+## y  1.4549864 -0.5366558
+## u -0.5366558  0.3338122
+```
+
+Habiendo estimado el VAR a continuación encontramos las restricciones de corto y largo plazo:
+
+
+```r
+BQMODEL<- BQ(VAR_2 )
+summary(BQMODEL)
+```
+
+```
+## 
+## SVAR Estimation Results:
+## ======================== 
+## 
+## Call:
+## BQ(x = VAR_2)
+## 
+## Type: Blanchard-Quah 
+## Sample size: 280 
+## Log Likelihood: -568.972 
+## 
+## Estimated contemporaneous impact matrix:
+##          y       u
+## y  0.80140 -0.9053
+## u -0.01779  0.5775
+## 
+## Estimated identified long run impact matrix:
+##        y     u
+## y 17.994 0.000
+## u  1.581 6.974
+## 
+## Covariance matrix of reduced form residuals (*100):
+##        y      u
+## y 146.18 -53.71
+## u -53.71  33.38
+```
+
+
+En seguida calculamos la función impulso respuesta para cada variable
+
+```r
+FIR_BQ <- irf(BQMODEL,n.ahead = 40, impulse = c("y","u"), boot =FALSE)
+supply <- cbind(cumsum(FIR_BQ$irf$y[, 1]), FIR_BQ$irf$y[, 2])
+#RESULTADO<-as.data.frame(supply)
+RESULTADO<-as.data.frame(FIR_BQ$irf$y)
+PERIODO<-seq(1,41,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+CODE<-rep("Tecnológico",41)
+RESULTADO <-cbind(RESULTADO,CODE)
+#####################################
+demand <- cbind(-1*cumsum(FIR_BQ$irf$u[, 1]), -1*FIR_BQ$irf$u[, 2])
+#RESULTADO2 <-as.data.frame(demand)
+RESULTADO2<-as.data.frame(FIR_BQ$irf$u*-1)
+RESULTADO2 <-cbind(RESULTADO2,PERIODO)
+CODE<-rep("Demanda",41)
+RESULTADO2 <-cbind(RESULTADO2,CODE)
+RESULTADO <-rbind(RESULTADO,RESULTADO2)
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("y", "u"))
+BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("y", "u"))
+#BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("V1", "V2"))
+#BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("V1", "V2"))
+BASE_LONG$CODE <- factor(BASE_LONG$CODE,
+                            levels = c("Tecnológico", "Demanda"))
+variable_names <- list(
+  "y" = "Respuesta del producto",
+ "u" = "Respuesta del desempleo"
+)
+#variable_names <- list(
+ #"V1" = "Respuesta del producto",
+ #"V2" = "Respuesta del desempleo"
+#)
+variable_labeller2 <- function(variable,value){
+  if (variable=='measure') {
+    return(variable_names[value])
+  } else {
+    return(region_names)
+  }
+}
+paleta<-c("blue", "red")
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = CODE,
+                         colour=CODE))+
+  facet_wrap(.~measure, scales="free", labeller= variable_labeller2)
+Z<-Z+labs(y="Respuesta",
+          x="Períodos")+
+  geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)+
+  geom_line(size=1.5)+
+  scale_color_manual(values=paleta,
+                     labels = c("Shock de oferta", 
+                                "Shock de demanda"))
+Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12),
+           panel.grid.minor = element_blank(),
+           panel.grid.major.y = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           legend.key=element_rect(fill = "white", colour = "white",
+                                   color = "white", inherit.blank = FALSE),
+           legend.title = element_blank(),
+           legend.text  = element_text(size=10),
+           legend.position="bottom",
+           legend.spacing.x = unit(0.10, 'cm'),
+           legend.margin=margin(),
+           legend.background = element_rect(fill = "white", colour = "transparent",
+                                            color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+Z
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-7-1.png)<!-- -->
 
 # Paquetes en R
 
@@ -773,7 +927,7 @@ data("USA")
 usa<-as.zoo(USA)
 ```
 
-A continuación se aplicará el método de *ortogonalización de Sims* (@Sims80) el cual consiste en asumir que la matriz $C(0)$ es una matriz triangular inferior.
+A continuación se aplicará el método de *ortogonalización de* @Sims80 el cual consiste en asumir que la matriz $C(0)$ es una matriz triangular inferior.
 
 
 ```r
@@ -879,7 +1033,7 @@ P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
 P
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-8-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-12-1.png)<!-- -->
 
 Finalmente, podemos observar la descomposición de la varianza de la variable $\pi$:
 
@@ -924,7 +1078,7 @@ Z<-Z+theme_classic()+theme(
 Z
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-9-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-13-1.png)<!-- -->
 
 A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -937,7 +1091,7 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-10-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-14-1.png)<!-- -->
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función *id.cv()* la cual introduce el *cambio en la varianza* que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento *SB* en formato *ts*:
 
@@ -1188,7 +1342,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-18-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-22-1.png)<!-- -->
 
 El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta. 
 
@@ -1210,7 +1364,7 @@ fev.cv <- fevd(usa.cv, n.ahead = 48)
 plot(fev.cv)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-19-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-23-1.png)<!-- -->
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
 error al cuadrado.

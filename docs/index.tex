@@ -116,7 +116,7 @@
 
 \title{VECTORES AUTOREGRESIVOS (VAR)}
 \author{\href{https://ortiz-cevallos.github.io/MYSELF/}{Luis Ortiz-Cevallos}}
-\date{2022-04-04}
+\date{2022-04-18}
 
 \begin{document}
 \maketitle
@@ -502,10 +502,10 @@ La fracción de la varianza del error de pronóstico de la variable i dado por e
 \phi_{i,j}(h)=\frac{\omega_{i, j}(h)}{\Omega_{i}(h)}=\frac{\sum_{k=0}^{h} C_{i,j}(k)^{2}}{\sum_{k=0}^{h} \sum_{j=1}^{n}C_{i,j}(k)^{2}}
 \end{equation}
 
-\hypertarget{aplicaciuxf3n}{%
-\section{Aplicación}\label{aplicaciuxf3n}}
+\hypertarget{aplicaciuxf3n-cochrane94}{%
+\section{\texorpdfstring{Aplicación \citet{COCHRANE94}}{Aplicación @COCHRANE94}}\label{aplicaciuxf3n-cochrane94}}
 
-\citet{Cochrane94} estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios (\(c_{t}\)) y el PIB real (y\_\{t\}). Introduciendo 2 rezago el VAR se expesa como:
+\citet{COCHRANE94} estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios (\(c_{t}\)) y el PIB real (y\_\{t\}). Introduciendo 2 rezago el VAR se expesa como:
 
 \begin{align}
 c_{t}&= a_{c}+\beta_{1,1}^{c}c_{t-1}+\beta_{1,2}^{c}y_{t-1}+\beta_{2,1}^{c}c_{t-2}+\beta_{2,2}^{c}y_{t-2}+e_{c,t}\\
@@ -518,6 +518,7 @@ Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente 
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(quantmod)}
 \FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(stats)}
 \FunctionTok{library}\NormalTok{(stargazer)}
 \FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"PCENDC96"}\NormalTok{, }\StringTok{"PCESC96"}\NormalTok{, }\StringTok{"GDPC1"}\NormalTok{),}
            \AttributeTok{src =} \StringTok{"FRED"}\NormalTok{)}
@@ -533,27 +534,28 @@ Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente 
 \NormalTok{C}\OtherTok{\textless{}{-}}\NormalTok{PCENDC96}\SpecialCharTok{+}\NormalTok{PCESC96}
 \NormalTok{ep\_c       }\OtherTok{\textless{}{-}}\FunctionTok{endpoints}\NormalTok{(C, }\AttributeTok{on =} \StringTok{"quarters"}\NormalTok{)}
 \NormalTok{C          }\OtherTok{\textless{}{-}}\FunctionTok{period.apply}\NormalTok{(C , }\AttributeTok{INDEX =}\NormalTok{ ep\_c, }\AttributeTok{FUN =}\NormalTok{ last)}
+\NormalTok{C          }\OtherTok{\textless{}{-}}\FunctionTok{diff}\NormalTok{(}\FunctionTok{log}\NormalTok{(C), }\AttributeTok{lag=}\DecValTok{4}\NormalTok{)}
+\CommentTok{\#C          \textless{}{-}log(C)}
+\NormalTok{GDPC1      }\OtherTok{\textless{}{-}}\FunctionTok{diff}\NormalTok{(}\FunctionTok{log}\NormalTok{(GDPC1), }\AttributeTok{lag=}\DecValTok{4}\NormalTok{)}
+\CommentTok{\#GDPC1      \textless{}{-}log(GDPC1)}
 \NormalTok{GDPC1      }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(GDPC1, }\FunctionTok{index}\NormalTok{(C), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
 \NormalTok{GDPC1      }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(GDPC1, }\AttributeTok{fromLast =} \ConstantTok{FALSE}\NormalTok{))}
 \NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(C, GDPC1, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
 \NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{date=}\FunctionTok{index}\NormalTok{(BASE), }\FunctionTok{coredata}\NormalTok{(BASE))}
 \FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"C"}\NormalTok{, }\StringTok{"Y"}\NormalTok{)}
-\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{DC       =}\NormalTok{  C}\SpecialCharTok{{-}}\FunctionTok{lag}\NormalTok{(C, }\AttributeTok{n=}\DecValTok{4}\NormalTok{))}
-\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{c        =}\NormalTok{ (DC}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{lag}\NormalTok{(C, }\AttributeTok{n=}\DecValTok{4}\NormalTok{)))}\SpecialCharTok{*}\DecValTok{1}\NormalTok{)}
-\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{DY       =}\NormalTok{  Y}\SpecialCharTok{{-}}\FunctionTok{lag}\NormalTok{(Y, }\AttributeTok{n=}\DecValTok{4}\NormalTok{))}
-\NormalTok{BASE    }\OtherTok{\textless{}{-}}\FunctionTok{mutate}\NormalTok{(BASE, }\AttributeTok{y        =}\NormalTok{ (DY}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{lag}\NormalTok{(Y, }\AttributeTok{n=}\DecValTok{4}\NormalTok{)))}\SpecialCharTok{*}\DecValTok{1}\NormalTok{)}
-\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, c, y)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, C, Y)}
+\FunctionTok{colnames}\NormalTok{(DATA)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{, }\StringTok{"c"}\NormalTok{, }\StringTok{"y"}\NormalTok{)}
 \NormalTok{DATA    }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(DATA, date }\SpecialCharTok{\textgreater{}=} \StringTok{"2003{-}03{-}01"}\NormalTok{)}
 \NormalTok{DATA       }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(DATA[,}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{], }\AttributeTok{order.by=}\FunctionTok{as.Date}\NormalTok{(DATA[,}\DecValTok{1}\NormalTok{], }\StringTok{"\%Y/\%m/\%d"}\NormalTok{))}
 \FunctionTok{library}\NormalTok{(}\StringTok{"svars"}\NormalTok{)}
-\NormalTok{VAR\_1      }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(DATA, }\AttributeTok{p =} \DecValTok{2}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}const\textquotesingle{}}\NormalTok{)}
+\NormalTok{VAR\_1      }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(DATA, }\AttributeTok{p =} \DecValTok{1}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}const\textquotesingle{}}\NormalTok{)}
 \NormalTok{VAR\_1}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{y}\SpecialCharTok{$}\NormalTok{coefficients}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-##         c.l1         y.l1         c.l2         y.l2        const 
-##  1.299144187  0.178352073 -1.429590045  0.604256673  0.006285347
+##         c.l1         y.l1        const 
+##  1.031021984 -0.139087357  0.004025386
 \end{verbatim}
 
 \begin{Shaded}
@@ -563,8 +565,8 @@ Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente 
 \end{Shaded}
 
 \begin{verbatim}
-##         c.l1         y.l1         c.l2         y.l2        const 
-##  0.975774352  0.010371371 -0.651664645  0.313857444  0.005744135
+##         c.l1         y.l1        const 
+##  0.846092193 -0.115153170  0.005142927
 \end{verbatim}
 
 \begin{Shaded}
@@ -576,8 +578,8 @@ Utilizando datos trimestrales desde 1947Q1 hasta 2010Q3. Obtenemos la siguiente 
 
 \begin{verbatim}
 ##              c            y
-## c 0.0001952119 0.0001018477
-## y 0.0001018477 0.0001333163
+## c 0.0002165772 0.0001608193
+## y 0.0001608193 0.0002722802
 \end{verbatim}
 
 De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente \(\epsilon_{1,t}\) y del ingreso transitorio \(\epsilon_{2,t}\). La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que \(B_{1,2}=0\).
@@ -592,9 +594,9 @@ De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual a
 \end{Shaded}
 
 \begin{verbatim}
-##             c           y
-## c 0.013972801 0.000000000
-## y 0.007289874 0.008953255
+##            c          y
+## c 0.01471658 0.00000000
+## y 0.01092775 0.01236545
 \end{verbatim}
 
 Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
@@ -675,144 +677,101 @@ Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computa
 
 El impulso respuesta mostrado en la figura anterior es consistente con la teoría, pues se observa como el consumo se mueve poco ante un shock transitorio. La descomposición de la varianza por su parte revela:
 
-La ecuación anterior es la \emph{forma estructural}. Sin embargo, cuando se estima el VAR se hace en su \emph{forma reducida}, la que resulta trás premultiplicar por la matriz A:
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{RESULTADO}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{fevd}\NormalTok{(VAR\_1, }\AttributeTok{n.ahead =} \DecValTok{20}\NormalTok{)}\SpecialCharTok{$}\NormalTok{c)}
+\NormalTok{PERIODO}\OtherTok{\textless{}{-}}\FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{20}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"permanente"}\NormalTok{,}\DecValTok{20}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,CODE)}
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\NormalTok{RESULTADO2}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{fevd}\NormalTok{(VAR\_1, }\AttributeTok{n.ahead =} \DecValTok{20}\NormalTok{)}\SpecialCharTok{$}\NormalTok{y)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"transitorio"}\NormalTok{,}\DecValTok{20}\NormalTok{)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,CODE)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{rbind}\NormalTok{(RESULTADO,RESULTADO2)}
+\NormalTok{BASE\_LONG }\OtherTok{\textless{}{-}} \FunctionTok{gather}\NormalTok{(RESULTADO, }\AttributeTok{key=}\StringTok{"measure"}\NormalTok{, }\AttributeTok{value=}\StringTok{"value"}\NormalTok{,}
+                    \FunctionTok{c}\NormalTok{(}\StringTok{"c"}\NormalTok{,}\StringTok{"y"}\NormalTok{))}
 
-\begin{equation}
-Ax_t = A\Gamma x_{t−1} + Bw_t
-\end{equation}
+\NormalTok{BASE\_LONG}\SpecialCharTok{$}\NormalTok{CODE }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(BASE\_LONG}\SpecialCharTok{$}\NormalTok{CODE,}
+                            \AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"permanente"}\NormalTok{,}\StringTok{"transitorio"}\NormalTok{))}
 
-Si asumimos que los \emph{errores estructurales} que integran el vector \(w_{t}\) son ruido blanco, y que los coeficientes en la matriz \(\Gamma\) son \emph{estructurales} los cuales difieran de sus contrapartes en su forma reducida.
+\NormalTok{variable\_names }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
+  \StringTok{"permanente"} \OtherTok{=}  \StringTok{"Varianza del consumo"}\NormalTok{,}
+  \StringTok{"transitorio"} \OtherTok{=} \StringTok{"Varianza del producto"}
+\NormalTok{)}
+\NormalTok{variable\_labeller2 }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(variable,value)\{}
+  \ControlFlowTok{if}\NormalTok{ (variable}\SpecialCharTok{==}\StringTok{\textquotesingle{}CODE\textquotesingle{}}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(variable\_names[value])}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \FunctionTok{return}\NormalTok{(region\_names)}
+\NormalTok{  \}}
+\NormalTok{\}}
 
-Para ver lo anterior, multiplicamos la ecuación anterior por \(A^{-1}\):
+\NormalTok{paleta}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\FunctionTok{ggplot}\NormalTok{(BASE\_LONG, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PERIODO, }\AttributeTok{y=}\NormalTok{value, }\AttributeTok{group =}\NormalTok{ measure,}
+                         \AttributeTok{fill=}\NormalTok{measure))}\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(.}\SpecialCharTok{\textasciitilde{}}\NormalTok{CODE, }\AttributeTok{scales=}\StringTok{"free"}\NormalTok{, }\AttributeTok{labeller=}\NormalTok{ variable\_labeller2)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Porcentaje"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Períodos"}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_bar}\NormalTok{(}\AttributeTok{stat=}\StringTok{\textquotesingle{}identity\textquotesingle{}}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values=}\NormalTok{paleta,}
+                     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Shock permanente"}\NormalTok{, }
+                                \StringTok{"Shock transitorio"}\NormalTok{))}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.right =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{14}\NormalTok{),}
+           \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+           \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.border =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.key=}\FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"white"}\NormalTok{,}
+                                   \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{),}
+           \AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.text  =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{10}\NormalTok{),}
+           \AttributeTok{legend.position=}\StringTok{"bottom"}\NormalTok{,}
+           \AttributeTok{legend.spacing.x =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.10}\NormalTok{, }\StringTok{\textquotesingle{}cm\textquotesingle{}}\NormalTok{),}
+           \AttributeTok{legend.margin=}\FunctionTok{margin}\NormalTok{(),}
+           \AttributeTok{legend.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"transparent"}\NormalTok{,}
+                                            \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{)}\SpecialCharTok{+}\FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{1}\NormalTok{))}
+\NormalTok{Z}
+\end{Highlighting}
+\end{Shaded}
 
-\begin{align}
-x_t &= A^{-1}A\Gamma x_{t−1} + A^{-1}Bw_t\\
-x_t &= \Gamma x_{t−1} + \eta_t
-\end{align}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-4-1.pdf}
 
-Un modelo SVAR puede ser usado para identificar los shocks y trazar su función impulso respuesta o bien analizar su descomposición de varianza, lo anterior gracias a que podemos imponer ciertas restricciones en las matrices A y/o B.
-
-Es de recalcar que si el modelo SVAR es un modelo estructural, parte de un modelo VAR(p) en su forma reducida:
-
-\begin{equation}
-Ax_t = A\Gamma x_{t−1} + Bw_t
-\end{equation}
-
-Donde solo se pueden agregar restricciones para A y B. Además los residuos en su forma reducida se puede recuperar de un modelo SVAR por \(\eta_t=A^{-1}Bw_t=Qw_t\) y su matriz de varianza-covarianza es \(\Sigma_\eta=A^{-1}B\Sigma_{w}B^{\tau}(A^{-1})^{\tau}=Q\Sigma_{w}Q^{\tau}=QQ^{\tau}\).
-
-De manera que el impulso respuesta de este modelo ante un shock estrutural en (\(w_t\)) viene dado por:
-
-\(\begin{array}{ccccccccc} w_{t} &\colon &0&0&I&0&0&0&0 \\ x_{t} &\colon &0&0&A^{-1}B&B&AB&A^{2}B&\cdots \end{array}\)
-
-Es posible distinguir tres tipos de SVAR según se impongan las restricciones:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  \emph{Modelo A} La matriz B corresponde a \(I_{k}\) lo que implica que el número mínimo de restricciones para su identificación es \(k\frac{(k-1)}{2}\)
-\item
-  \emph{Modelo B} La matriz A corresponde a \(I_{k}\) lo que implica que el número mínimo de restricciones para su identificación es \(k\frac{(k-1)}{2}\)
-\item
-  \emph{Modelo AB} Las restricciones pueden ser impuestas en ambas matrices siendo el número mínimo de restricciones para su identificación es \(k^{2}+k\frac{(k-1)}{2}\)
-\end{enumerate}
-
-\hypertarget{ortogonalizaciuxf3n}{%
-\section{Ortogonalización}\label{ortogonalizaciuxf3n}}
-
-La función impulso respuesta de un VAR es ligeramente ambigua.
-
-Sabemos que podemos representar cualquier serie de tiempo como una \emph{arbitraria} combinación lineal de un conjunto de funciones de impulso respuestas.
-
-Entonces la \emph{Ortogonalización} se refiere al proceso de seleccionar uno de las posibles funciones de impulsos respuestas que sea más interesante para el análisis económico.
-
-Si definimos la matriz \(A^{*}\) en función del operador de rezagos:
-\begin{equation}
-A^{*}=\left( \begin{array}{cccc}
-L      & NA  & \cdots & NA\\
-\beta_{1,2} & L   &        & NA\\
-\vdots &     & \ddots & NA\\
-\beta_{1,k} & \beta_{2,k}   & \cdots & L\\
-\end{array}
-\right)
-\end{equation}
-
-Un VAR expresado en notación vectorial estaría dado:
-
-\begin{align}
-A^{*}(L)x_{t}&=w_{t},\;\;A^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
-\end{align}
-
-Si definimos la matriz B en función de sus rezagos:
-\begin{equation}
-B^{*}=\left( \begin{array}{cccc}
-L      & NA  & \cdots & NA\\
-\Phi_{1,2} & L   &        & NA\\
-\vdots &     & \ddots & NA\\
-\Phi_{1,k} & \Phi_{2,k}   & \cdots & L\\
-\end{array}
-\right)
-\end{equation}
-
-En notación MA se escribe:
-
-\begin{align}
-x_{t}&=B^{*}(L)w_{t},\;\;B^{*}(0)=I,\;\;E(w_{t}w_{t}^{'})=\Sigma_w 
-\end{align}
-
-Donde \(B^{*}(L)=A^{*}(L)^{-1}\), siendo \(B^{*}(L)\) la respuesta de \(x_{t}\) a una unidad de impulso de cada elemento de \(e_{t}\)
-
-Ahora supongase que queremos calcular la respuesta de \(x_{t}\) a un nuevo shock, el cual es una combinación lineal de viejos schocks, por ejemplo usted quiere calcular el efecto de \(x_{t}\) de un schocks tal que: \(\eta_{1t}=e_{\pi t}\) y \(\eta_{2t}=5e_{\pi t}+e_{mt}\) ó:
-\begin{equation}
-\eta_{t}=Qw_t,\;\;Q=\left( \begin{array}{cc}
-    1 & 0\\
-    5 & 1
-\end{array}
-\right) \nonumber
-\end{equation}
-
-Con ello podemos reescribir el VAR en notación MA:
-\begin{align}
-x_{t}&=C(L)\eta_{t},\;\;C(L)=B^{*}(L)Q^{-1}
-\end{align}
-
-Donde C(L) representa la respuesta de \(x_{t}\) a los schocks \(\eta_{t}\), ó visto de una forma alternativa C(L) sería una combinación lineal de los impulsos respuestas originales \(B^{*}(L)\).
-
-Pero ¿Qué combinación lineal deberíamos observar?
-
-Es de notar que los datos no nos pueden ayudar ya que tanto la representación \(x_{t}=B^{*}(L)w_{t}\) y \(x_{t}=C(L)\eta_{t}\) son equivalentes y producen las mismas series.
-
-Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados \emph{supuestos de ortogonalización}.
-
-\hypertarget{supuestos-de-ortogonalizaciuxf3n}{%
-\section{Supuestos de Ortogonalización}\label{supuestos-de-ortogonalizaciuxf3n}}
-
-El primero y quizás el más popular supuesto es que los shocks son ortogonales (no están correlacionados).
-
-Si dos shocks \(e_{\pi t}\) y \(e_{mt}\) están correlacionados entonces no tiene sentido preguntarse, ¿qué pasa si \(e_{\pi t}\) se impulsa en una unidad?, pues obviamente también se estaría moviendo \(e_{mt}\) al mismo tiempo.
-
-Un ejemplo concreto, nosotros queremos saber la función impulso respuesta en términos causales, es decir el \emph{efecto} de la inflación en el precio de las manzanas. Pero si el shock de la inflación está correlacionado al shock del precio de las manzanas, no podemos saber si lo que estamos viendo como respuesta del precio de las manzanas se debe a un shock de inflación ó es debido a un shock en la oferta de las manzanas.
-
-Adicionalmente es conveniente reescalar el shock para que este se exprese en unidades de la varianza de las series.
-
-El supuesto de shocks ortogonales busca encontrar una matriz Q, tal que \(E(\eta_{t}\eta_{t}^{'})=I\). Por lo cual:
-
-\begin{align}
-Q^{-1}Q^{-1'}&=\Sigma_{\eta} \\
-E(\eta_{t}\eta_{t}^{'})&=E(Qw_{t}w_{t}^{'}Q^{'})=Q\Sigma_{w} Q^{'}=I\nonumber
-\end{align}
+El gráfico anterior también confirma la teoría básica. El consumo es completamente explicado por los shocks permanentes. Una significativa fracción de los movimientos en el producto en el corto plazo obedecen a shocks transitorios, en horizontes largo los shocks permanentes se hacen más relevantes.
 
 \hypertarget{ortogonalizaciuxf3n-de-sims}{%
 \section{Ortogonalización de Sims}\label{ortogonalizaciuxf3n-de-sims}}
 
-Una vía de construir la matriz Q es por la descomposición de Choleski.
+Es de notar que los datos, por sí solos, no nos pueden ayudar ya que tanto el proceso \(x_{t}=C(L)\epsilon_{t}\) como el proceso \(x_{t}=A(L)^{-1}e_{t}\) son equivalentes y producen las mismas series.
 
-Desafortunadamente existen muchas matrices Q que pueden hacer cumplir la identidad \(E(\eta_{t}\eta_{t}^{'})=I\), entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizara la teoría económica para especificar C(0) y C(1).
+Así que somos nosotros quienes decidimos cual combinación lineal es más interesante, en base a un conjunto de supuestos llamados \emph{supuestos de ortogonalización}.
 
-Sims sugiere que se especifica las propiedades de C(0).
+Recordemos que existe una vinculación líneal entre el shock estructural \((\epsilon_{t}=[\epsilon_{x,t}\;\;\;\epsilon_{z,t}])\) con las innovaciones de la forma reducida \((e_{t}=[e_{x,t}\;\;\;e_{z,t}])\):
 
-Enfatizando el hecho de que sólo en el caso en que \(\Sigma_{w}\) sea diagonal, cualquier diagonalización de la matriz Q debería tener elementos en la posición no diagonal y por tanto \(C(0)\neq I\), implicando que algún shocks debería tener efecto contemporáneo en más de una variable.
+\begin{equation}
+e_{t}=B\epsilon_{t}
+\end{equation}
 
-En especifico Sims sugiere escoger una matriz triangular inferior C(0) tal que:
+Sí \(\Sigma_e=E(e e^{\tau})\) es la matriz de varianza y covarianza de la forma reducida, y \(\Sigma_\epsilon=E(\epsilon \epsilon^{\tau})=I\) es la matriz identidad se tiene:
+
+\begin{align}
+\Sigma_e&=BB^{\tau}\\
+B^{-1}\Sigma_eB^{-1\tau}&=I\\
+Q\Sigma_eQ^{\tau}&=I
+\end{align}
+
+Una forma de construir la matriz Q es a través de la descomposición de Cholesky
+
+Desafortunadamente existen muchas matrices Q que pueden hacer cumplir la identidad \(Q\Sigma_eQ^{\tau}=I\), entonces la pregunta es: ¿cuál de esas matrices Q hay que escoger?: La respuesta dependerá de las propiedades que impongamos del proceso MA ó C(L), en concreto se utilizará la teoría económica para especificar C(0) y C(1).
+
+\citet{Sims802} sugiere que se específique las propiedades de C(0), enfatizando el hecho de que \(A(0)=I\). En especifico sugiere escoger una matriz triangular inferior C(0) tal que:
 
 \begin{equation}
     \left( \begin{array}{c}
@@ -823,13 +782,13 @@ En especifico Sims sugiere escoger una matriz triangular inferior C(0) tal que:
     C_{0m  \pi} & C_{0mm}
     \end{array}
     \right) \left( \begin{array}{c}
-    \eta_{1t}\\
-    \eta_{2t}
+    \epsilon_{1t}\\
+    \epsilon_{2t}
     \end{array}
-    \right) +C_{1}\eta_{t-1}+\cdots
+    \right) +C_{1}\epsilon_{t-1}+\cdots
 \end{equation}
 
-La matriz triangular inferior C(0) implica que \(\pi_{t}\) aparece en la ecuación de \(m_{t}\), pero \(m_{t}\) no en la ecuación de \(\pi_{t}\). Para observar lo anterior podemos representar el sistema dado por la ecuación anterior como un proceso autorregresivo y ortogonalizado: \(D(L)x_{t}=\eta_{t}\), donde \(D(L)=C(L)^{-1}\); recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:
+La matriz triangular inferior C(0) implica que \(\pi_{t}\) aparece en la ecuación de \(m_{t}\), pero \(m_{t}\) no en la ecuación de \(\pi_{t}\). Para observar lo anterior podemos representar el sistema dado por la ecuación anterior como un proceso autorregresivo y ortogonalizado: \(D(L)x_{t}=\epsilon_{t}\), donde \(D(L)=C(L)^{-1}\); recordando que la inversa de una matriz triangular inferior es también una matriz triangular inferior, tenemos:
 
 \begin{equation}
       \left( \begin{array}{cc}
@@ -840,33 +799,241 @@ La matriz triangular inferior C(0) implica que \(\pi_{t}\) aparece en la ecuaci�
       \left( \begin{array}{c}
       \pi_{t} \\
        m_{t} 
-      \end{array}\right)+D_{1}x_{t-1}+\cdots=\eta_{t}\nonumber
+      \end{array}\right)+D_{1}x_{t-1}+\cdots=\epsilon_{t}\nonumber
 \end{equation}
 
 Es de notar que la sugerencia de Sims es equivalente a estimar un sistema \((\pi_{t}, m_{t})\) por OLS, en que la ecuación de \(m_{t}\) tenga como regresor \(\pi_{t}\), pero no viceversa y escalando cada ecuación para que la varianza del error sea 1.
 
 \begin{align}
-\pi_{t}&=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1\pi \pi}\pi_{t-1}+\cdots+\alpha_{1\pi m}m_{t-1}+\cdots+\eta_{1t}\nonumber \\
-m_{t}&=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_{t-1}+\cdots +\eta_{2t}\nonumber
+\pi_{t}&=\;\;\;\;\;\;\;\;\;\;\;\;\;\;\alpha_{1\pi \pi}\pi_{t-1}+\cdots+\alpha_{1\pi m}m_{t-1}+\cdots+\epsilon_{1t}\nonumber \\
+m_{t}&=\alpha_{0m \pi}\pi_{t}+\alpha_{1m \pi}\pi_{t-1}+\cdots+\alpha_{1mm}m_{t-1}+\cdots +\epsilon_{2t}\nonumber
 \end{align}
 
-En resumen se puede unicamente especificar la matriz Q como una combinación lineal de los shocks originales \((w_{t})\) y elaborar los impulsos respuesta de acuerdo a:
+En resumen se puede unicamente especificar la matriz B como una combinación lineal de los shocks originales \((\epsilon_{t})\) y elaborar los impulsos respuesta de acuerdo a:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  El error \((w_{t})\) son ortogonales.
+  El error \((\epsilon_{t})\) son ortogonales.
 \item
   Que la respuesta instantánea de una variable a un shock es cero, siendo este al caso de estimar un VAR por OLS con efecto contemporaneo de \(\pi\) sobre m y no viceversa.
 \end{enumerate}
 
-Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior Q:
+Es de notar que si se específica C(0) se garantiza que al aplicar la descomposición de Choleski se produce una única matriz triangular inferior B:
 \begin{align}
-C(0)&=B^{*}(0)Q^{-1}=A^{-1}BQ^{-1}=A^{-1}BQ \nonumber\\
+C(0)&=A(0)^{-1}B=IB=B \nonumber\\
 \end{align}
 
 Entonces lo importante es decidir el orden de prelación \emph{De lo exógeno a lo endógeno} de las variables en el VAR; auxiliándose de la teoría económica.
+
+\hypertarget{blanchard-quah-ortogonalizaciuxf3n-restricciones-sobre-c1}{%
+\section{Blanchard-Quah ortogonalización (restricciones) sobre C(1)}\label{blanchard-quah-ortogonalizaciuxf3n-restricciones-sobre-c1}}
+
+\citet{BLANCHARD88} definen un modelo partiendo del mismo supuesto en que \(e_{t}=B\epsilon_{t}\) por lo que se tiene:
+
+\begin{align}
+A(L)(1-\phi)x_{t}&=e_{t}\\
+A(0)(1-\phi)x_{t}&=B\epsilon_{t}\\
+A(L)x_{t}&=(1-\phi)^{-1}B\epsilon_{t}\\
+\end{align}
+
+Donde \(C(1)=(1-\phi)^{-1}B=A(1)B\) por los que se tiene:
+
+\begin{align}
+(1-\phi)\Sigma_{e}(1-\phi)&=BB^{\tau}\\
+Q(1-\phi)\Sigma_e(1-\phi)Q^{\tau}&=I\\
+\end{align}
+
+De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shock.
+
+\hypertarget{aplicaciuxf3n-blanchard88}{%
+\section{\texorpdfstring{Aplicación \citet{BLANCHARD88}}{Aplicación @BLANCHARD88}}\label{aplicaciuxf3n-blanchard88}}
+
+\citet{BLANCHARD88} argumentan que los shocks de demanda no tienen efectos en el largo plazo sobre el producto nominal. Para ello se requiere que C(1) sea una matriz triangular inferior en un VAR donde el producto nominal sea la variable exógena.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"GDP"}\NormalTok{, }\StringTok{"UNRATE"}\NormalTok{),}
+           \AttributeTok{src =} \StringTok{"FRED"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "GDP"    "UNRATE"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ep\_U       }\OtherTok{\textless{}{-}}\FunctionTok{endpoints}\NormalTok{(UNRATE, }\AttributeTok{on =} \StringTok{"quarters"}\NormalTok{)}
+\NormalTok{U          }\OtherTok{\textless{}{-}}\FunctionTok{period.apply}\NormalTok{(UNRATE, }\AttributeTok{INDEX =}\NormalTok{ ep\_U, }\AttributeTok{FUN =}\NormalTok{ last)}
+\CommentTok{\#U          \textless{}{-}U[{-}1]}
+\NormalTok{U          }\OtherTok{\textless{}{-}}\NormalTok{U}\SpecialCharTok{{-}}\FunctionTok{mean}\NormalTok{(U,}\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{diff}\NormalTok{(}\DecValTok{100}\SpecialCharTok{*}\FunctionTok{log}\NormalTok{(GDP), }\AttributeTok{lag=}\DecValTok{1}\NormalTok{)}
+\CommentTok{\#Y          \textless{}{-}Y{-}mean(Y,na.rm=TRUE)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(Y, }\FunctionTok{index}\NormalTok{(U), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(Y, }\AttributeTok{fromLast =} \ConstantTok{FALSE}\NormalTok{))}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(U, Y, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{date=}\FunctionTok{index}\NormalTok{(BASE), }\FunctionTok{coredata}\NormalTok{(BASE))}
+\FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"U"}\NormalTok{, }\StringTok{"Y"}\NormalTok{)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, Y, U)}
+\FunctionTok{colnames}\NormalTok{(DATA)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{, }\StringTok{"y"}\NormalTok{, }\StringTok{"u"}\NormalTok{)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(DATA, date }\SpecialCharTok{\textgreater{}=} \StringTok{"1951{-}06{-}01"}\NormalTok{)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(DATA[,}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{], }\AttributeTok{order.by=}\FunctionTok{as.Date}\NormalTok{(DATA[,}\DecValTok{1}\NormalTok{], }\StringTok{"\%Y/\%m/\%d"}\NormalTok{))}
+\FunctionTok{library}\NormalTok{(}\StringTok{"svars"}\NormalTok{)}
+\NormalTok{VAR\_2      }\OtherTok{\textless{}{-}}\NormalTok{ vars}\SpecialCharTok{::}\FunctionTok{VAR}\NormalTok{(DATA, }\AttributeTok{p =} \DecValTok{4}\NormalTok{, }\AttributeTok{type =} \StringTok{\textquotesingle{}none\textquotesingle{}}\NormalTok{)}
+\NormalTok{VAR\_2}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{y}\SpecialCharTok{$}\NormalTok{coefficients}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
+##  0.35103276  0.64950669  0.37665552 -0.12295317  0.19998463 -0.13713731 
+##        y.l4        u.l4 
+##  0.01638701 -0.25960029
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{VAR\_2}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{u}\SpecialCharTok{$}\NormalTok{coefficients}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
+## -0.11043586  0.87198140  0.01998763  0.20230286  0.07495755 -0.01065473 
+##        y.l4        u.l4 
+##  0.02375368 -0.14644337
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{SIGMA}\OtherTok{\textless{}{-}}\FunctionTok{summary}\NormalTok{(VAR\_2)}
+\NormalTok{SIGMA}\SpecialCharTok{$}\NormalTok{covres}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            y          u
+## y  1.4549864 -0.5366558
+## u -0.5366558  0.3338122
+\end{verbatim}
+
+Habiendo estimado el VAR a continuación encontramos las restricciones de corto y largo plazo:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{BQMODEL}\OtherTok{\textless{}{-}} \FunctionTok{BQ}\NormalTok{(VAR\_2 )}
+\FunctionTok{summary}\NormalTok{(BQMODEL)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## SVAR Estimation Results:
+## ======================== 
+## 
+## Call:
+## BQ(x = VAR_2)
+## 
+## Type: Blanchard-Quah 
+## Sample size: 280 
+## Log Likelihood: -568.972 
+## 
+## Estimated contemporaneous impact matrix:
+##          y       u
+## y  0.80140 -0.9053
+## u -0.01779  0.5775
+## 
+## Estimated identified long run impact matrix:
+##        y     u
+## y 17.994 0.000
+## u  1.581 6.974
+## 
+## Covariance matrix of reduced form residuals (*100):
+##        y      u
+## y 146.18 -53.71
+## u -53.71  33.38
+\end{verbatim}
+
+En seguida calculamos la función impulso respuesta para cada variable
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{FIR\_BQ }\OtherTok{\textless{}{-}} \FunctionTok{irf}\NormalTok{(BQMODEL,}\AttributeTok{n.ahead =} \DecValTok{40}\NormalTok{, }\AttributeTok{impulse =} \FunctionTok{c}\NormalTok{(}\StringTok{"y"}\NormalTok{,}\StringTok{"u"}\NormalTok{), }\AttributeTok{boot =}\ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{supply }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\FunctionTok{cumsum}\NormalTok{(FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{y[, }\DecValTok{1}\NormalTok{]), FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{y[, }\DecValTok{2}\NormalTok{])}
+\CommentTok{\#RESULTADO\textless{}{-}as.data.frame(supply)}
+\NormalTok{RESULTADO}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{y)}
+\NormalTok{PERIODO}\OtherTok{\textless{}{-}}\FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{41}\NormalTok{,}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"Tecnológico"}\NormalTok{,}\DecValTok{41}\NormalTok{)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO,CODE)}
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\NormalTok{demand }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\SpecialCharTok{*}\FunctionTok{cumsum}\NormalTok{(FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{u[, }\DecValTok{1}\NormalTok{]), }\SpecialCharTok{{-}}\DecValTok{1}\SpecialCharTok{*}\NormalTok{FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{u[, }\DecValTok{2}\NormalTok{])}
+\CommentTok{\#RESULTADO2 \textless{}{-}as.data.frame(demand)}
+\NormalTok{RESULTADO2}\OtherTok{\textless{}{-}}\FunctionTok{as.data.frame}\NormalTok{(FIR\_BQ}\SpecialCharTok{$}\NormalTok{irf}\SpecialCharTok{$}\NormalTok{u}\SpecialCharTok{*{-}}\DecValTok{1}\NormalTok{)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,PERIODO)}
+\NormalTok{CODE}\OtherTok{\textless{}{-}}\FunctionTok{rep}\NormalTok{(}\StringTok{"Demanda"}\NormalTok{,}\DecValTok{41}\NormalTok{)}
+\NormalTok{RESULTADO2 }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(RESULTADO2,CODE)}
+\NormalTok{RESULTADO }\OtherTok{\textless{}{-}}\FunctionTok{rbind}\NormalTok{(RESULTADO,RESULTADO2)}
+\NormalTok{BASE\_LONG }\OtherTok{\textless{}{-}} \FunctionTok{gather}\NormalTok{(RESULTADO, }\AttributeTok{key=}\StringTok{"measure"}\NormalTok{, }\AttributeTok{value=}\StringTok{"value"}\NormalTok{,}\FunctionTok{c}\NormalTok{(}\StringTok{"y"}\NormalTok{, }\StringTok{"u"}\NormalTok{))}
+\NormalTok{BASE\_LONG}\SpecialCharTok{$}\NormalTok{measure }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(BASE\_LONG}\SpecialCharTok{$}\NormalTok{measure,                           }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"y"}\NormalTok{, }\StringTok{"u"}\NormalTok{))}
+\CommentTok{\#BASE\_LONG \textless{}{-} gather(RESULTADO, key="measure", value="value",c("V1", "V2"))}
+\CommentTok{\#BASE\_LONG$measure \textless{}{-} factor(BASE\_LONG$measure,                           levels = c("V1", "V2"))}
+\NormalTok{BASE\_LONG}\SpecialCharTok{$}\NormalTok{CODE }\OtherTok{\textless{}{-}} \FunctionTok{factor}\NormalTok{(BASE\_LONG}\SpecialCharTok{$}\NormalTok{CODE,}
+                            \AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Tecnológico"}\NormalTok{, }\StringTok{"Demanda"}\NormalTok{))}
+\NormalTok{variable\_names }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
+  \StringTok{"y"} \OtherTok{=} \StringTok{"Respuesta del producto"}\NormalTok{,}
+ \StringTok{"u"} \OtherTok{=} \StringTok{"Respuesta del desempleo"}
+\NormalTok{)}
+\CommentTok{\#variable\_names \textless{}{-} list(}
+ \CommentTok{\#"V1" = "Respuesta del producto",}
+ \CommentTok{\#"V2" = "Respuesta del desempleo"}
+\CommentTok{\#)}
+\NormalTok{variable\_labeller2 }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(variable,value)\{}
+  \ControlFlowTok{if}\NormalTok{ (variable}\SpecialCharTok{==}\StringTok{\textquotesingle{}measure\textquotesingle{}}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(variable\_names[value])}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \FunctionTok{return}\NormalTok{(region\_names)}
+\NormalTok{  \}}
+\NormalTok{\}}
+\NormalTok{paleta}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\FunctionTok{ggplot}\NormalTok{(BASE\_LONG, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{PERIODO, }\AttributeTok{y=}\NormalTok{value, }\AttributeTok{group =}\NormalTok{ CODE,}
+                         \AttributeTok{colour=}\NormalTok{CODE))}\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(.}\SpecialCharTok{\textasciitilde{}}\NormalTok{measure, }\AttributeTok{scales=}\StringTok{"free"}\NormalTok{, }\AttributeTok{labeller=}\NormalTok{ variable\_labeller2)}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Respuesta"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Períodos"}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept=}\DecValTok{0}\NormalTok{, }\AttributeTok{linetype=}\StringTok{"dashed"}\NormalTok{,}
+             \AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size=}\DecValTok{1}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size=}\FloatTok{1.5}\NormalTok{)}\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values=}\NormalTok{paleta,}
+                     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Shock de oferta"}\NormalTok{, }
+                                \StringTok{"Shock de demanda"}\NormalTok{))}
+\NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.right =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{14}\NormalTok{),}
+           \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+           \AttributeTok{panel.grid.minor =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.y =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.grid.major.x =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.border =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.key=}\FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"white"}\NormalTok{,}
+                                   \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{),}
+           \AttributeTok{legend.title =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{legend.text  =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{10}\NormalTok{),}
+           \AttributeTok{legend.position=}\StringTok{"bottom"}\NormalTok{,}
+           \AttributeTok{legend.spacing.x =} \FunctionTok{unit}\NormalTok{(}\FloatTok{0.10}\NormalTok{, }\StringTok{\textquotesingle{}cm\textquotesingle{}}\NormalTok{),}
+           \AttributeTok{legend.margin=}\FunctionTok{margin}\NormalTok{(),}
+           \AttributeTok{legend.background =} \FunctionTok{element\_rect}\NormalTok{(}\AttributeTok{fill =} \StringTok{"white"}\NormalTok{, }\AttributeTok{colour =} \StringTok{"transparent"}\NormalTok{,}
+                                            \AttributeTok{color =} \StringTok{"white"}\NormalTok{, }\AttributeTok{inherit.blank =} \ConstantTok{FALSE}\NormalTok{)}
+\NormalTok{)}\SpecialCharTok{+}\FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{nrow =} \DecValTok{1}\NormalTok{))}
+\NormalTok{Z}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-7-1.pdf}
 
 \hypertarget{paquetes-en-r}{%
 \chapter{Paquetes en R}\label{paquetes-en-r}}
@@ -893,7 +1060,7 @@ Enseguida se cargará una base de datos en frecuencia trimestral que contiene la
 \end{Highlighting}
 \end{Shaded}
 
-A continuación se aplicará el método de \emph{ortogonalización de Sims} (\citet{Sims80}) el cual consiste en asumir que la matriz \(C(0)\) es una matriz triangular inferior.
+A continuación se aplicará el método de \emph{ortogonalización de} \citet{Sims80} el cual consiste en asumir que la matriz \(C(0)\) es una matriz triangular inferior.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1003,7 +1170,7 @@ Y representamos la función impulso respuesta ante un shock en \(\pi\).
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-8-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-12-1.pdf}
 
 Finalmente, podemos observar la descomposición de la varianza de la variable \(\pi\):
 
@@ -1049,7 +1216,7 @@ Finalmente, podemos observar la descomposición de la varianza de la variable \(
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-13-1.pdf}
 
 A continuación se replicará los resultados obtenidos por \citet{Herwartz2016}, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función \emph{id.cv()} dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -1064,7 +1231,7 @@ Un primer paso es visualizar cada una de las series.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-10-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-14-1.pdf}
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función \emph{id.cv()} la cual introduce el \emph{cambio en la varianza} que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento \emph{SB} en formato \emph{ts}:
 
@@ -1328,7 +1495,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-18-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-22-1.pdf}
 
 El resumen el resultado revela que solo el 12.7\% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta.
 
@@ -1351,7 +1518,7 @@ crea un objeto para la inspección visual de la descomposición de la varianza d
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-19-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-23-1.pdf}
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50\% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5\% de la media de predicción
 error al cuadrado.
