@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-04-18"
+date: "2022-04-20"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -396,7 +396,7 @@ La fracción de la varianza del error de pronóstico de la variable i dado por e
 
 ## Aplicación @COCHRANE94
 
-@COCHRANE94 estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios ($c_{t}$) y el PIB real (y_{t}). Introduciendo 2 rezago el VAR se expesa como:
+@COCHRANE94 estima un VAR de dos variables, el gasto real de consumo en bienes no durables más servicios ($c_{t}$) y el PIB real ($y_{t}$). Introduciendo 2 rezago el VAR se expesa como:
 
 \begin{align}
 c_{t}&= a_{c}+\beta_{1,1}^{c}c_{t-1}+\beta_{1,2}^{c}y_{t-1}+\beta_{2,1}^{c}c_{t-2}+\beta_{2,2}^{c}y_{t-2}+e_{c,t}\\
@@ -713,7 +713,7 @@ Entonces lo importante es decidir el orden de prelación *De lo exógeno a lo en
 
 \begin{align}
 A(L)(1-\phi)x_{t}&=e_{t}\\
-A(0)(1-\phi)x_{t}&=B\epsilon_{t}\\
+A(L)(1-\phi)x_{t}&=B\epsilon_{t}\\
 A(L)x_{t}&=(1-\phi)^{-1}B\epsilon_{t}\\
 \end{align}
 
@@ -734,40 +734,44 @@ De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock.
 
 
 ```r
-getSymbols(c("GDP", "UNRATE"),
+getSymbols(c("GNP", "UNRATE"),
            src = "FRED")
 ```
 
 ```
-## [1] "GDP"    "UNRATE"
+## [1] "GNP"    "UNRATE"
 ```
 
 ```r
-ep_U       <-endpoints(UNRATE, on = "quarters")
-U          <-period.apply(UNRATE, INDEX = ep_U, FUN = last)
-#U          <-U[-1]
-U          <-U-mean(U,na.rm=TRUE)
-Y          <-diff(100*log(GDP), lag=1)
-#Y          <-Y-mean(Y,na.rm=TRUE)
+TRUModel   <- lm(UNRATE["1948-01-01/1987-12-01"] ~ c(1:length(UNRATE["1948-01-01/1987-12-01"])))
+RATE       <-resid(TRUModel) 
+ep_U       <-endpoints(RATE, on = "quarters")
+U          <-period.apply(RATE, INDEX = ep_U, FUN = mean)
+Y          <-diff(100*log(GNP), lag=1)
+Y1         <-Y["1948-01-01/1973-12-01"]-mean(Y["1948-01-01/1973-12-01"])  
+Y2         <-Y["1974-01-01/1987-12-01"]-mean(Y["1974-01-01/1987-12-01"]) 
+Y          <-rbind(Y1,Y2)
 Y          <-merge(Y, index(U), join="outer")
 Y          <-cbind(na.locf(Y, fromLast = FALSE))
 BASE       <-merge(U, Y, join="left")
 BASE       <-data.frame(date=index(BASE), coredata(BASE))
-colnames(BASE)<-c("date","U", "Y")
+BASE       <-filter(BASE, date>="1950-02-01")
+colnames(BASE)<-c("date","Y", "U")
 DATA    <-dplyr::select(BASE, date, Y, U)
 colnames(DATA)<-c("date", "y", "u")
-DATA    <-filter(DATA, date >= "1951-06-01")
 DATA    <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
 library("svars")
-VAR_2      <- vars::VAR(DATA, p = 4, type = 'none')
+VAR_2      <- vars::VAR(DATA, p = 8, type = 'none')
 VAR_2$varresult$y$coefficients
 ```
 
 ```
-##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
-##  0.35103276  0.64950669  0.37665552 -0.12295317  0.19998463 -0.13713731 
-##        y.l4        u.l4 
-##  0.01638701 -0.25960029
+##         y.l1         u.l1         y.l2         u.l2         y.l3         u.l3 
+##  1.481198547 -0.071119734 -0.638411505 -0.038011980  0.119273044  0.009105261 
+##         y.l4         u.l4         y.l5         u.l5         y.l6         u.l6 
+## -0.090400529  0.046530626  0.190982546  0.068683925 -0.085048685 -0.044135422 
+##         y.l7         u.l7         y.l8         u.l8 
+## -0.014813882  0.019762008 -0.038907057  0.038056651
 ```
 
 ```r
@@ -776,9 +780,11 @@ VAR_2$varresult$u$coefficients
 
 ```
 ##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
-## -0.11043586  0.87198140  0.01998763  0.20230286  0.07495755 -0.01065473 
-##        y.l4        u.l4 
-##  0.02375368 -0.14644337
+## -0.63924270  0.19711908  1.37782282  0.16581898 -0.73474450 -0.03226927 
+##        y.l4        u.l4        y.l5        u.l5        y.l6        u.l6 
+##  0.60422078  0.08055120 -0.91221991 -0.07966736  0.52100759  0.12987391 
+##        y.l7        u.l7        y.l8        u.l8 
+## -0.03488430  0.02336134 -0.15989703 -0.01369831
 ```
 
 ```r
@@ -788,8 +794,8 @@ SIGMA$covres
 
 ```
 ##            y          u
-## y  1.4549864 -0.5366558
-## u -0.5366558  0.3338122
+## y  0.0990044 -0.1801656
+## u -0.1801656  1.0078420
 ```
 
 Habiendo estimado el VAR a continuación encontramos las restricciones de corto y largo plazo:
@@ -809,78 +815,75 @@ summary(BQMODEL)
 ## BQ(x = VAR_2)
 ## 
 ## Type: Blanchard-Quah 
-## Sample size: 280 
-## Log Likelihood: -568.972 
+## Sample size: 144 
+## Log Likelihood: -214.876 
 ## 
 ## Estimated contemporaneous impact matrix:
-##          y       u
-## y  0.80140 -0.9053
-## u -0.01779  0.5775
+##         y        u
+## y  0.3112 -0.04944
+## u -0.4339  0.90564
 ## 
 ## Estimated identified long run impact matrix:
-##        y     u
-## y 17.994 0.000
-## u  1.581 6.974
+##         y     u
+## y  3.8371 0.000
+## u -0.6602 1.712
 ## 
 ## Covariance matrix of reduced form residuals (*100):
-##        y      u
-## y 146.18 -53.71
-## u -53.71  33.38
+##         y      u
+## y   9.927 -17.98
+## u -17.978 100.84
 ```
 
 
-En seguida calculamos la función impulso respuesta para cada variable
+En seguida calculamos la función impulso respuesta para cada variable teniendo en cuenta que la tasa de desempleo no sufre ningún efecto de ambos shocks estructurales de largo plazo.
 
 ```r
-FIR_BQ <- irf(BQMODEL,n.ahead = 40, impulse = c("y","u"), boot =FALSE)
+FIR_BQ <- irf(BQMODEL,n.ahead = 40, impulse = c("y", "u"), boot =FALSE)
 supply <- cbind(cumsum(FIR_BQ$irf$y[, 1]), FIR_BQ$irf$y[, 2])
-#RESULTADO<-as.data.frame(supply)
-RESULTADO<-as.data.frame(FIR_BQ$irf$y)
+RESULTADO<-as.data.frame(supply)
+#RESULTADO<-as.data.frame(FIR_BQ$irf$y)
 PERIODO<-seq(1,41,1)
 RESULTADO <-cbind(RESULTADO,PERIODO)
 CODE<-rep("Tecnológico",41)
 RESULTADO <-cbind(RESULTADO,CODE)
 #####################################
 demand <- cbind(-1*cumsum(FIR_BQ$irf$u[, 1]), -1*FIR_BQ$irf$u[, 2])
-#RESULTADO2 <-as.data.frame(demand)
-RESULTADO2<-as.data.frame(FIR_BQ$irf$u*-1)
+RESULTADO2 <-as.data.frame(demand)
+#RESULTADO2<-as.data.frame(FIR_BQ$irf$u*-1)
 RESULTADO2 <-cbind(RESULTADO2,PERIODO)
 CODE<-rep("Demanda",41)
 RESULTADO2 <-cbind(RESULTADO2,CODE)
 RESULTADO <-rbind(RESULTADO,RESULTADO2)
-BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("y", "u"))
-BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("y", "u"))
-#BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("V1", "V2"))
-#BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("V1", "V2"))
+#BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("y", "u"))
+#BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("y", "u"))
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("V1", "V2"))
+BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("V1", "V2"))
 BASE_LONG$CODE <- factor(BASE_LONG$CODE,
                             levels = c("Tecnológico", "Demanda"))
 variable_names <- list(
-  "y" = "Respuesta del producto",
- "u" = "Respuesta del desempleo"
+  "Tecnológico" = "Shock de oferta",
+      "Demanda" = "Shock de demanda"
 )
-#variable_names <- list(
- #"V1" = "Respuesta del producto",
- #"V2" = "Respuesta del desempleo"
-#)
+
 variable_labeller2 <- function(variable,value){
-  if (variable=='measure') {
+  if (variable=='CODE') {
     return(variable_names[value])
   } else {
     return(region_names)
   }
 }
 paleta<-c("blue", "red")
-Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = CODE,
-                         colour=CODE))+
-  facet_wrap(.~measure, scales="free", labeller= variable_labeller2)
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = measure,
+                         colour=measure))+
+  facet_wrap(.~CODE, scales="free", labeller= variable_labeller2)
 Z<-Z+labs(y="Respuesta",
           x="Períodos")+
   geom_hline(yintercept=0, linetype="dashed",
              color = "black", size=1)+
   geom_line(size=1.5)+
   scale_color_manual(values=paleta,
-                     labels = c("Shock de oferta", 
-                                "Shock de demanda"))
+                     labels = c("Producto", 
+                                "Desempleo"))
 Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
            axis.line.y.left  = element_line(colour = "black", size = 0.5),
            axis.line.y.right = element_blank(),
@@ -905,6 +908,126 @@ Z
 ```
 
 ![](01-conceptos_files/figure-epub3/unnamed-chunk-7-1.png)<!-- -->
+
+
+El resultado de @BLANCHARD88 implican que los choques de demanda fueron responsables de la gran mayoría de las fluctuaciones en el corto plazo.
+
+## Aplicación @GALI99
+
+@GALI99 considera que la formulación impuesta por @BLANCHARD88 es un poco restrictiva. El supuesto que ninguno de los shocks de oferta y demanda pueden cambiar el nivel de tasa de desempleo en el largo plazo podría no ser correcta. Por lo anterior propone una formulación próxima a la predicción hecha por el modelo RBC referente al mercado laboral.
+
+El modelo RBC, asume que el shock tecnólogico conduce los ciclos económicos y explica porque las horas trabajadas son más altas durante los boom que en tiempo de recesión.
+
+@GALI99 propone un VAR conformado por la diferencia logarítimica del producto por horas trabajadas ($\Delta z_{t}$) y por la diferencia logarítimica de las horas trabajadas ($\Delta \eta_{t}$).
+
+
+Los supuestos sobre la matriz diagonal inferior que expresan las restricciones de largo plazo muestran que el shock de oferta hoy llamado tecnólogico puede afectar la productividad en el largo plazo, no así el shock no tecnólogico.
+
+
+```r
+getSymbols(c("OPHNFB", "HOANBS"),
+           src = "FRED")
+```
+
+```
+## [1] "OPHNFB" "HOANBS"
+```
+
+```r
+dz         <-diff(100*log(OPHNFB), lag=1)
+dz         <-dz["1948-01-01/1994-12-01"]  
+dn         <-diff(100*log(HOANBS), lag=1)
+dn         <-dn["1948-01-01/1994-12-01"]  
+BASE       <-merge(dz, dn, join="outer")
+BASE       <-data.frame(date=index(BASE), coredata(BASE))
+colnames(BASE)<-c("date","dz", "dn")
+DATA    <-dplyr::select(BASE, date, dz, dn)
+colnames(DATA)<-c("date", "y", "u")
+DATA    <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
+```
+
+
+
+```r
+library("svars")
+VAR_3      <- vars::VAR(DATA, ic = "AIC", lag.max = 8, type = "const")
+GMODEL<- BQ(VAR_3)
+FIR_GAL <- irf(GMODEL,n.ahead = 40, impulse = c("y","u"), boot =FALSE, cumulative=TRUE)
+RESULTADO<-as.data.frame(FIR_GAL$irf$y)
+PERIODO<-seq(1,41,1)
+RESULTADO <-cbind(RESULTADO,PERIODO)
+CODE<-rep("Tecnológico",41)
+RESULTADO <-cbind(RESULTADO,CODE)
+#####################################
+RESULTADO2<-as.data.frame(FIR_GAL$irf$u)
+RESULTADO2 <-cbind(RESULTADO2,PERIODO)
+CODE<-rep("Demanda",41)
+RESULTADO2 <-cbind(RESULTADO2,CODE)
+RESULTADO <-rbind(RESULTADO,RESULTADO2)
+BASE_LONG <- gather(RESULTADO, key="measure", value="value",c("y", "u"))
+BASE_LONG$measure <- factor(BASE_LONG$measure,                           levels = c("y", "u"))
+BASE_LONG$CODE <- factor(BASE_LONG$CODE,
+                            levels = c("Tecnológico", "Demanda"))
+variable_names <- list(
+  "Tecnológico" = "Shock tecnológico",
+      "Demanda" = "Shock no tecnológico"
+)
+
+variable_labeller2 <- function(variable,value){
+  if (variable=='CODE') {
+    return(variable_names[value])
+  } else {
+    return(region_names)
+  }
+}
+paleta<-c("blue", "red")
+Z<-ggplot(BASE_LONG, aes(x=PERIODO, y=value, group = measure,
+                         colour=measure))+
+  facet_wrap(.~CODE, scales="free", labeller= variable_labeller2)
+Z<-Z+labs(y="Respuesta",
+          x="Períodos")+
+  geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)+
+  geom_line(size=1.5)+
+  scale_color_manual(values=paleta,
+                     labels = c("Productividad", 
+                                "Horas"))
+Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12),
+           panel.grid.minor = element_blank(),
+           panel.grid.major.y = element_blank(),
+           panel.grid.major.x = element_blank(),
+           panel.border = element_blank(),
+           panel.background = element_blank(),
+           legend.key=element_rect(fill = "white", colour = "white",
+                                   color = "white", inherit.blank = FALSE),
+           legend.title = element_blank(),
+           legend.text  = element_text(size=10),
+           legend.position="bottom",
+           legend.spacing.x = unit(0.10, 'cm'),
+           legend.margin=margin(),
+           legend.background = element_rect(fill = "white", colour = "transparent",
+                                            color = "white", inherit.blank = FALSE)
+)+guides(color = guide_legend(nrow = 1))
+Z
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-9-1.png)<!-- -->
+
+Como puede apreciarse en la figura anterior, los shocks no tecnológicos causan *en el corto plazo* efectos tanto en el producto como en la productividad; se evidencia que los movimientos ciclicos en el corto plazo de la productividad no son únicamente impulsados por los shocks tecnológicos.
+
+¿Cómo se explica lo anterior? A través de coste de ajuste en el recurso trabajo. Durante un auge en lugar de contratar mano de obra nueva se sobreutiliza la existente. En recesión, esos empleados no son despedidos sino que son subutilizados.
+
+También se muestra que los shocks no tecnológicos elevan la utilización del factor trabajo. La explicación de ese hecho es menos clara, por lo que algunos autores estiman un VAR de manera que las horas no tengan efectos en el largo plazo.
+
+En lo que respecto al shock tecnológico, éste provoca que la productividad se eleve permanentemente mientras las horas decaén en al menos en el corto plazo. La interpretación es que en el corto plazo el producto es conducido por factores de demanda y no de oferta. Una mayor eficiencia significa que la demanda de productos puede ser satisfecha como menos trabajo.
+
+Lo anterios desmiente las conclusiones de los modelos RBC, por lo que estos resultados son controversiales.
+
+
 
 # Paquetes en R
 
@@ -1033,7 +1156,7 @@ P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
 P
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-12-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-14-1.png)<!-- -->
 
 Finalmente, podemos observar la descomposición de la varianza de la variable $\pi$:
 
@@ -1078,7 +1201,7 @@ Z<-Z+theme_classic()+theme(
 Z
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-13-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-15-1.png)<!-- -->
 
 A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -1091,7 +1214,7 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-14-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-16-1.png)<!-- -->
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función *id.cv()* la cual introduce el *cambio en la varianza* que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento *SB* en formato *ts*:
 
@@ -1342,7 +1465,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-22-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-24-1.png)<!-- -->
 
 El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta. 
 
@@ -1364,7 +1487,7 @@ fev.cv <- fevd(usa.cv, n.ahead = 48)
 plot(fev.cv)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-23-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-25-1.png)<!-- -->
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
 error al cuadrado.

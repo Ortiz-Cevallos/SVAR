@@ -8,6 +8,7 @@ aplicación-cochrane94
 ortogonalización-de-sims
 blanchard-quah-ortogonalización-restricciones-sobre-c1
 aplicación-blanchard88
+aplicación-gali99
 paquetes-en-r
 paquete-svars
 bla-bla
