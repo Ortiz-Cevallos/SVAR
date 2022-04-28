@@ -692,22 +692,34 @@ De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock.
 @BLANCHARD88 argumentan que los shocks de demanda no tienen efectos en el largo plazo sobre el producto nominal. Para ello se requiere que C(1) sea una matriz triangular inferior en un VAR donde el producto nominal sea la variable exógena. 
 
 ```{r message=FALSE, warning=FALSE}
-getSymbols(c("GNP", "UNRATE"),
+getSymbols(c("GDPC1", "UNRATE"),
            src = "FRED")
 TRUModel   <- lm(UNRATE["1948-01-01/1987-12-01"] ~ c(1:length(UNRATE["1948-01-01/1987-12-01"])))
 RATE       <-resid(TRUModel) 
 ep_U       <-endpoints(RATE, on = "quarters")
 U          <-period.apply(RATE, INDEX = ep_U, FUN = mean)
-Y          <-diff(100*log(GNP), lag=1)
-Y1         <-Y["1948-01-01/1973-12-01"]-mean(Y["1948-01-01/1973-12-01"])  
-Y2         <-Y["1974-01-01/1987-12-01"]-mean(Y["1974-01-01/1987-12-01"]) 
-Y          <-rbind(Y1,Y2)
+Y          <-diff(100*log(GDPC1), lag=1)
+Y          <-Y["1947-04-01/1987-10-01"]
+dates1     <- seq(as.Date("1947-04-01"), length=107,by="quarters")
+dates2     <- seq(as.Date("1974-01-01"), length=56, by="quarters")
+Y1         <- xts(rep(1, 107), order.by=dates1)
+Y2         <- xts(rep(0,  56), order.by=dates2)
+D1         <- rbind(Y1,Y2)
+Y3         <- xts(rep(0, 107), order.by=dates1)
+Y4         <- xts(rep(1,  56), order.by=dates2)
+D2         <- rbind(Y3,Y4)
+YModel     <-lm(Y ~ D1+D2-1)
+Y          <-resid(YModel)
+Y_T        <-as.xts(fitted(YModel))
 Y          <-merge(Y, index(U), join="outer")
 Y          <-cbind(na.locf(Y, fromLast = FALSE))
 BASE       <-merge(U, Y, join="left")
+Y_T        <-merge(Y_T, index(U), join="outer")
+Y_T        <-cbind(na.locf(Y_T, fromLast = FALSE))
+BASE       <-merge(BASE, Y_T, join="left")
 BASE       <-data.frame(date=index(BASE), coredata(BASE))
-BASE       <-filter(BASE, date>="1950-02-01")
-colnames(BASE)<-c("date","Y", "U")
+BASE       <-filter(BASE, date>="1950-01-01")
+colnames(BASE)<-c("date","U", "Y", "Y_T")
 DATA    <-dplyr::select(BASE, date, Y, U)
 colnames(DATA)<-c("date", "y", "u")
 DATA    <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
@@ -773,7 +785,7 @@ Z<-Z+labs(y="Respuesta",
              color = "black", size=1)+
   geom_line(size=1.5)+
   scale_color_manual(values=paleta,
-                     labels = c("Producto", 
+                     labels = c("Tasa de crecimiento del producto",
                                 "Desempleo"))
 Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
            axis.line.y.left  = element_line(colour = "black", size = 0.5),
@@ -799,7 +811,154 @@ Z
 ```
 
 
+
 El resultado de @BLANCHARD88 implican que los choques de demanda fueron responsables de la gran mayoría de las fluctuaciones en el corto plazo.
+
+```{r message=FALSE, warning=FALSE}
+if (BQMODEL$B[1,2]<0){
+  V=c(1,-1)
+  bqfactor<-BQMODEL$B%*%as.matrix(diag(V))
+  } 
+adjust<-(VAR_2$obs-((VAR_2$varresult$y$rank+VAR_2$varresult$u$rank)/VAR_2$K))/VAR_2$obs
+
+bqfactor<-bqfactor*sqrt(adjust)
+VARhd <- function(Estimation){
+ ## make X and Y
+nlag    <- Estimation$p   # number of lags
+DATA    <- Estimation$y   # data
+QQ      <- VARmakexy(DATA,nlag,0)
+## Retrieve and initialize variables 
+#invA   <- t(chol(as.matrix(summary(Estimation)$covres)))# inverse of the A matrix
+#invA    <- BQMODEL$LRIM
+invA    <- bqfactor
+Fcomp   <- companionmatrix(Estimation)                   # Companion matrix
+#det     <- c_case                                       # constant and/or trends
+F1      <- t(QQ$Ft)                                     # make comparable to notes
+eps     <- ginv(invA) %*% t(residuals(Estimation)) 
+# structural errors 
+nvar    <- Estimation$K                                 # number of endogenous variables
+nvarXeq <- nvar * nlag                                  # number of lagged endogenous per equation
+nvar_ex <- 0                                                # number of exogenous (excluding constant and trend)
+Y       <- QQ$Y                                             # left-hand side
+#X     <- QQ$X[,(1+det):(nvarXeq+det)]                    # right-hand side (no exogenous)
+nobs    <- nrow(Y)                                          # number of observations
+## Compute historical decompositions
+# Contribution of each shock
+invA_big    <- matrix(0,nvarXeq,nvar)
+invA_big[1:nvar,] <- invA
+Icomp       <- cbind(diag(nvar), matrix(0,nvar,(nlag-1)*nvar))
+HDshock_big <- array(0, dim=c(nlag*nvar,nobs+1,nvar))
+HDshock     <- array(0, dim=c(nvar,(nobs+1),nvar))
+
+for (j in 1:nvar){  # for each variable
+  eps_big <- matrix(0,nvar,(nobs+1)) # matrix of shocks conformable with companion
+  eps_big[j,2:ncol(eps_big)] <- eps[j,]
+  for (i in 2:(nobs+1)){
+    HDshock_big[,i,j] <- invA_big %*% eps_big[,i] + Fcomp %*% HDshock_big[,(i-1),j]
+    HDshock[,i,j] <-  Icomp %*% HDshock_big[,i,j]
+  } 
+} 
+
+HD.shock <- array(0, dim=c((nobs+nlag),nvar,nvar))   # [nobs x shock x var]
+
+for (i in 1:nvar){
+    for (j in 1:nvar){
+      HD.shock[,j,i] <- c(rep(NA,nlag), HDshock[i,(2:dim(HDshock)[2]),j])
+  }
+}
+
+return(HD.shock)
+
+}
+
+VARmakexy <- function(DATA,lags,c_case){
+nobs <- nrow(DATA)
+#Y matrix 
+Y <- DATA[(lags+1):nrow(DATA),]
+Y <- DATA[-c(1:lags),]
+#X-matrix 
+if (c_case==0){
+  X <- NA
+  for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      } 
+  } else if(c_case==1){ #constant
+      X <- NA
+      for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      }
+      X <- cbind(matrix(1,(nobs-lags),1), X) 
+    } else if(c_case==2){ # time trend and constant
+      X <- NA
+      for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      }
+      trend <- c(1:nrow(X))
+      X <-cbind(matrix(1,(nobs-lags),1), t(trend))
+    }
+A <- (t(X) %*% as.matrix(X)) 
+B <- (as.matrix(t(X)) %*% as.matrix(Y))
+
+Ft <- ginv(A) %*% B
+retu <- list(X=X,Y=Y, Ft=Ft)
+return(retu)
+}
+
+companionmatrix <- function (x) 
+{
+  if (!(class(x) == "varest")) {
+    stop("\nPlease provide an object of class 'varest', generated by 'VAR()'.\n")
+  }
+  K <- x$K
+  p <- x$p
+  A <- unlist(Acoef(x))
+  companion <- matrix(0, nrow = K * p, ncol = K * p)
+  companion[1:K, 1:(K * p)] <- A
+  if (p > 1) {
+    j <- 0
+    for (i in (K + 1):(K * p)) {
+      j <- j + 1
+      companion[i, j] <- 1
+    }
+  }
+  return(companion)
+}
+
+BQh<-VARhd(VAR_2)
+BQD<-BQh[,2,1]
+dates1     <- seq(as.Date("1950-01-01"), length=152,by="quarters")
+BQD<-xts(BQD, order.by=dates1)
+getSymbols(c("USRECD"),
+           src = "FRED")
+ep_USRECD  <-endpoints(USRECD, on = "quarters")
+USRECD     <-period.apply(USRECD , INDEX = ep_USRECD, FUN = max)
+YY         <-merge(USRECD, index(BQD), join="outer")
+YY         <-cbind(na.locf(YY, fromLast = TRUE))
+BASE       <-merge(BQD, YY, join="left")
+BASE       <-data.frame(date=index(BASE), coredata(BASE))
+colnames(BASE)<-c("date","Y", "R")
+DATA    <-dplyr::select(BASE, date, Y, R)
+DATA    <-filter(DATA, date >= "1952-01-01")
+```
+
+```{r message=FALSE, warning=FALSE}
+library(scales)
+P <-ggplot(data = DATA, aes(x = date, y =Y*1))
+P<-P+labs(y="Tasa de variación (%)",
+          x="Período", title = "Fluctuaciones del producto dado shock en demanda")+geom_line(size=1.5, color="blue")
+P<-P+geom_vline(xintercept=as.Date(ifelse(DATA$R==1, DATA$date, NA)), linetype='dashed', color=rep('red', length(DATA$R)))+
+geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)
+P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           plot.title = element_text(size=14, hjust = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12))
+P<-P+scale_x_date(breaks = "4 years", labels=date_format("%Y"))
+P
+```
+
 
 ## Aplicación @GALI99
 

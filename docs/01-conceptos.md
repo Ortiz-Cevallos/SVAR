@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-04-20"
+date: "2022-04-27"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -734,12 +734,12 @@ De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock.
 
 
 ```r
-getSymbols(c("GNP", "UNRATE"),
+getSymbols(c("GDPC1", "UNRATE"),
            src = "FRED")
 ```
 
 ```
-## [1] "GNP"    "UNRATE"
+## [1] "GDPC1"  "UNRATE"
 ```
 
 ```r
@@ -747,16 +747,28 @@ TRUModel   <- lm(UNRATE["1948-01-01/1987-12-01"] ~ c(1:length(UNRATE["1948-01-01
 RATE       <-resid(TRUModel) 
 ep_U       <-endpoints(RATE, on = "quarters")
 U          <-period.apply(RATE, INDEX = ep_U, FUN = mean)
-Y          <-diff(100*log(GNP), lag=1)
-Y1         <-Y["1948-01-01/1973-12-01"]-mean(Y["1948-01-01/1973-12-01"])  
-Y2         <-Y["1974-01-01/1987-12-01"]-mean(Y["1974-01-01/1987-12-01"]) 
-Y          <-rbind(Y1,Y2)
+Y          <-diff(100*log(GDPC1), lag=1)
+Y          <-Y["1947-04-01/1987-10-01"]
+dates1     <- seq(as.Date("1947-04-01"), length=107,by="quarters")
+dates2     <- seq(as.Date("1974-01-01"), length=56, by="quarters")
+Y1         <- xts(rep(1, 107), order.by=dates1)
+Y2         <- xts(rep(0,  56), order.by=dates2)
+D1         <- rbind(Y1,Y2)
+Y3         <- xts(rep(0, 107), order.by=dates1)
+Y4         <- xts(rep(1,  56), order.by=dates2)
+D2         <- rbind(Y3,Y4)
+YModel     <-lm(Y ~ D1+D2-1)
+Y          <-resid(YModel)
+Y_T        <-as.xts(fitted(YModel))
 Y          <-merge(Y, index(U), join="outer")
 Y          <-cbind(na.locf(Y, fromLast = FALSE))
 BASE       <-merge(U, Y, join="left")
+Y_T        <-merge(Y_T, index(U), join="outer")
+Y_T        <-cbind(na.locf(Y_T, fromLast = FALSE))
+BASE       <-merge(BASE, Y_T, join="left")
 BASE       <-data.frame(date=index(BASE), coredata(BASE))
-BASE       <-filter(BASE, date>="1950-02-01")
-colnames(BASE)<-c("date","Y", "U")
+BASE       <-filter(BASE, date>="1950-01-01")
+colnames(BASE)<-c("date","U", "Y", "Y_T")
 DATA    <-dplyr::select(BASE, date, Y, U)
 colnames(DATA)<-c("date", "y", "u")
 DATA    <- xts(DATA[,-1], order.by=as.Date(DATA[,1], "%Y/%m/%d"))
@@ -767,11 +779,11 @@ VAR_2$varresult$y$coefficients
 
 ```
 ##         y.l1         u.l1         y.l2         u.l2         y.l3         u.l3 
-##  1.481198547 -0.071119734 -0.638411505 -0.038011980  0.119273044  0.009105261 
+##  0.084643928 -0.797700253  0.091996360  1.687229033  0.014958902 -0.821969638 
 ##         y.l4         u.l4         y.l5         u.l5         y.l6         u.l6 
-## -0.090400529  0.046530626  0.190982546  0.068683925 -0.085048685 -0.044135422 
+##  0.118395754  0.878320541  0.031906807 -0.965687332  0.199517955  0.555163427 
 ##         y.l7         u.l7         y.l8         u.l8 
-## -0.014813882  0.019762008 -0.038907057  0.038056651
+## -0.075029618 -0.601355664 -0.002320675  0.281299408
 ```
 
 ```r
@@ -779,12 +791,12 @@ VAR_2$varresult$u$coefficients
 ```
 
 ```
-##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
-## -0.63924270  0.19711908  1.37782282  0.16581898 -0.73474450 -0.03226927 
-##        y.l4        u.l4        y.l5        u.l5        y.l6        u.l6 
-##  0.60422078  0.08055120 -0.91221991 -0.07966736  0.52100759  0.12987391 
-##        y.l7        u.l7        y.l8        u.l8 
-## -0.03488430  0.02336134 -0.15989703 -0.01369831
+##         y.l1         u.l1         y.l2         u.l2         y.l3         u.l3 
+## -0.123340332  1.312024159 -0.102844727 -0.609397348 -0.090189350  0.089769287 
+##         y.l4         u.l4         y.l5         u.l5         y.l6         u.l6 
+## -0.037413568 -0.070811294 -0.014735409  0.235075502 -0.106024188 -0.070619219 
+##         y.l7         u.l7         y.l8         u.l8 
+## -0.004578130  0.063548050  0.009414328 -0.008749867
 ```
 
 ```r
@@ -793,9 +805,9 @@ SIGMA$covres
 ```
 
 ```
-##            y          u
-## y  0.0990044 -0.1801656
-## u -0.1801656  1.0078420
+##            y           u
+## y  0.9118184 -0.19343517
+## u -0.1934352  0.09180338
 ```
 
 Habiendo estimado el VAR a continuación encontramos las restricciones de corto y largo plazo:
@@ -816,22 +828,22 @@ summary(BQMODEL)
 ## 
 ## Type: Blanchard-Quah 
 ## Sample size: 144 
-## Log Likelihood: -214.876 
+## Log Likelihood: -188.052 
 ## 
 ## Estimated contemporaneous impact matrix:
-##         y        u
-## y  0.3112 -0.04944
-## u -0.4339  0.90564
+##       y       u
+## y 0.244 -0.9232
+## u 0.167  0.2537
 ## 
 ## Estimated identified long run impact matrix:
 ##         y     u
-## y  3.8371 0.000
-## u -0.6602 1.712
+## y  0.3794 0.000
+## u -0.1890 4.288
 ## 
 ## Covariance matrix of reduced form residuals (*100):
-##         y      u
-## y   9.927 -17.98
-## u -17.978 100.84
+##        y       u
+## y  91.18 -19.343
+## u -19.34   9.225
 ```
 
 
@@ -882,7 +894,7 @@ Z<-Z+labs(y="Respuesta",
              color = "black", size=1)+
   geom_line(size=1.5)+
   scale_color_manual(values=paleta,
-                     labels = c("Producto", 
+                     labels = c("Tasa de crecimiento del producto",
                                 "Desempleo"))
 Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
            axis.line.y.left  = element_line(colour = "black", size = 0.5),
@@ -910,7 +922,165 @@ Z
 ![](01-conceptos_files/figure-epub3/unnamed-chunk-7-1.png)<!-- -->
 
 
+
 El resultado de @BLANCHARD88 implican que los choques de demanda fueron responsables de la gran mayoría de las fluctuaciones en el corto plazo.
+
+
+```r
+if (BQMODEL$B[1,2]<0){
+  V=c(1,-1)
+  bqfactor<-BQMODEL$B%*%as.matrix(diag(V))
+  } 
+adjust<-(VAR_2$obs-((VAR_2$varresult$y$rank+VAR_2$varresult$u$rank)/VAR_2$K))/VAR_2$obs
+
+bqfactor<-bqfactor*sqrt(adjust)
+VARhd <- function(Estimation){
+ ## make X and Y
+nlag    <- Estimation$p   # number of lags
+DATA    <- Estimation$y   # data
+QQ      <- VARmakexy(DATA,nlag,0)
+## Retrieve and initialize variables 
+#invA   <- t(chol(as.matrix(summary(Estimation)$covres)))# inverse of the A matrix
+#invA    <- BQMODEL$LRIM
+invA    <- bqfactor
+Fcomp   <- companionmatrix(Estimation)                   # Companion matrix
+#det     <- c_case                                       # constant and/or trends
+F1      <- t(QQ$Ft)                                     # make comparable to notes
+eps     <- ginv(invA) %*% t(residuals(Estimation)) 
+# structural errors 
+nvar    <- Estimation$K                                 # number of endogenous variables
+nvarXeq <- nvar * nlag                                  # number of lagged endogenous per equation
+nvar_ex <- 0                                                # number of exogenous (excluding constant and trend)
+Y       <- QQ$Y                                             # left-hand side
+#X     <- QQ$X[,(1+det):(nvarXeq+det)]                    # right-hand side (no exogenous)
+nobs    <- nrow(Y)                                          # number of observations
+## Compute historical decompositions
+# Contribution of each shock
+invA_big    <- matrix(0,nvarXeq,nvar)
+invA_big[1:nvar,] <- invA
+Icomp       <- cbind(diag(nvar), matrix(0,nvar,(nlag-1)*nvar))
+HDshock_big <- array(0, dim=c(nlag*nvar,nobs+1,nvar))
+HDshock     <- array(0, dim=c(nvar,(nobs+1),nvar))
+
+for (j in 1:nvar){  # for each variable
+  eps_big <- matrix(0,nvar,(nobs+1)) # matrix of shocks conformable with companion
+  eps_big[j,2:ncol(eps_big)] <- eps[j,]
+  for (i in 2:(nobs+1)){
+    HDshock_big[,i,j] <- invA_big %*% eps_big[,i] + Fcomp %*% HDshock_big[,(i-1),j]
+    HDshock[,i,j] <-  Icomp %*% HDshock_big[,i,j]
+  } 
+} 
+
+HD.shock <- array(0, dim=c((nobs+nlag),nvar,nvar))   # [nobs x shock x var]
+
+for (i in 1:nvar){
+    for (j in 1:nvar){
+      HD.shock[,j,i] <- c(rep(NA,nlag), HDshock[i,(2:dim(HDshock)[2]),j])
+  }
+}
+
+return(HD.shock)
+
+}
+
+VARmakexy <- function(DATA,lags,c_case){
+nobs <- nrow(DATA)
+#Y matrix 
+Y <- DATA[(lags+1):nrow(DATA),]
+Y <- DATA[-c(1:lags),]
+#X-matrix 
+if (c_case==0){
+  X <- NA
+  for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      } 
+  } else if(c_case==1){ #constant
+      X <- NA
+      for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      }
+      X <- cbind(matrix(1,(nobs-lags),1), X) 
+    } else if(c_case==2){ # time trend and constant
+      X <- NA
+      for (jj in 0:(lags-1)){
+        X <- rbind(DATA[(jj+1):(nobs-lags+jj),])
+      }
+      trend <- c(1:nrow(X))
+      X <-cbind(matrix(1,(nobs-lags),1), t(trend))
+    }
+A <- (t(X) %*% as.matrix(X)) 
+B <- (as.matrix(t(X)) %*% as.matrix(Y))
+
+Ft <- ginv(A) %*% B
+retu <- list(X=X,Y=Y, Ft=Ft)
+return(retu)
+}
+
+companionmatrix <- function (x) 
+{
+  if (!(class(x) == "varest")) {
+    stop("\nPlease provide an object of class 'varest', generated by 'VAR()'.\n")
+  }
+  K <- x$K
+  p <- x$p
+  A <- unlist(Acoef(x))
+  companion <- matrix(0, nrow = K * p, ncol = K * p)
+  companion[1:K, 1:(K * p)] <- A
+  if (p > 1) {
+    j <- 0
+    for (i in (K + 1):(K * p)) {
+      j <- j + 1
+      companion[i, j] <- 1
+    }
+  }
+  return(companion)
+}
+
+BQh<-VARhd(VAR_2)
+BQD<-BQh[,2,1]
+dates1     <- seq(as.Date("1950-01-01"), length=152,by="quarters")
+BQD<-xts(BQD, order.by=dates1)
+getSymbols(c("USRECD"),
+           src = "FRED")
+```
+
+```
+## [1] "USRECD"
+```
+
+```r
+ep_USRECD  <-endpoints(USRECD, on = "quarters")
+USRECD     <-period.apply(USRECD , INDEX = ep_USRECD, FUN = max)
+YY         <-merge(USRECD, index(BQD), join="outer")
+YY         <-cbind(na.locf(YY, fromLast = TRUE))
+BASE       <-merge(BQD, YY, join="left")
+BASE       <-data.frame(date=index(BASE), coredata(BASE))
+colnames(BASE)<-c("date","Y", "R")
+DATA    <-dplyr::select(BASE, date, Y, R)
+DATA    <-filter(DATA, date >= "1952-01-01")
+```
+
+
+```r
+library(scales)
+P <-ggplot(data = DATA, aes(x = date, y =Y*1))
+P<-P+labs(y="Tasa de variación (%)",
+          x="Período", title = "Fluctuaciones del producto dado shock en demanda")+geom_line(size=1.5, color="blue")
+P<-P+geom_vline(xintercept=as.Date(ifelse(DATA$R==1, DATA$date, NA)), linetype='dashed', color=rep('red', length(DATA$R)))+
+geom_hline(yintercept=0, linetype="dashed",
+             color = "black", size=1)
+P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
+           plot.title = element_text(size=14, hjust = 0.5),
+           axis.line.y.left  = element_line(colour = "black", size = 0.5),
+           axis.line.y.right = element_blank(),
+           axis.text.x = element_text( color = "black", size = 14),
+           axis.text.y = element_text( color = "black", size = 12))
+P<-P+scale_x_date(breaks = "4 years", labels=date_format("%Y"))
+P
+```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-9-1.png)<!-- -->
+
 
 ## Aplicación @GALI99
 
@@ -1015,7 +1185,7 @@ Z<-Z+theme(axis.line.x = element_line(colour = "black", size = 0.5),
 Z
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-9-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-11-1.png)<!-- -->
 
 Como puede apreciarse en la figura anterior, los shocks no tecnológicos causan *en el corto plazo* efectos tanto en el producto como en la productividad; se evidencia que los movimientos ciclicos en el corto plazo de la productividad no son únicamente impulsados por los shocks tecnológicos.
 
@@ -1156,7 +1326,7 @@ P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
 P
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-14-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-16-1.png)<!-- -->
 
 Finalmente, podemos observar la descomposición de la varianza de la variable $\pi$:
 
@@ -1201,7 +1371,7 @@ Z<-Z+theme_classic()+theme(
 Z
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-15-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-17-1.png)<!-- -->
 
 A continuación se replicará los resultados obtenidos por @Herwartz2016, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función *id.cv()* dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -1214,7 +1384,7 @@ Un primer paso es visualizar cada una de las series.
 autoplot(usa, facets = T) + theme_bw() + ylab('Evolución de series de USA')
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-16-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-18-1.png)<!-- -->
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función *id.cv()* la cual introduce el *cambio en la varianza* que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento *SB* en formato *ts*:
 
@@ -1465,7 +1635,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 plot(usa.cv.boot, lowerq = 0.16, upperq = 0.84)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-24-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-26-1.png)<!-- -->
 
 El resumen el resultado revela que solo el 12.7% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta. 
 
@@ -1487,7 +1657,7 @@ fev.cv <- fevd(usa.cv, n.ahead = 48)
 plot(fev.cv)
 ```
 
-![](01-conceptos_files/figure-epub3/unnamed-chunk-25-1.png)<!-- -->
+![](01-conceptos_files/figure-epub3/unnamed-chunk-27-1.png)<!-- -->
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5% de la media de predicción
 error al cuadrado.

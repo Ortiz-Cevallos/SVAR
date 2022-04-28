@@ -116,7 +116,7 @@
 
 \title{VECTORES AUTOREGRESIVOS (VAR)}
 \author{\href{https://ortiz-cevallos.github.io/MYSELF/}{Luis Ortiz-Cevallos}}
-\date{2022-04-20}
+\date{2022-04-27}
 
 \begin{document}
 \maketitle
@@ -854,13 +854,13 @@ De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shoc
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"GNP"}\NormalTok{, }\StringTok{"UNRATE"}\NormalTok{),}
+\FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"GDPC1"}\NormalTok{, }\StringTok{"UNRATE"}\NormalTok{),}
            \AttributeTok{src =} \StringTok{"FRED"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] "GNP"    "UNRATE"
+## [1] "GDPC1"  "UNRATE"
 \end{verbatim}
 
 \begin{Shaded}
@@ -869,16 +869,28 @@ De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shoc
 \NormalTok{RATE       }\OtherTok{\textless{}{-}}\FunctionTok{resid}\NormalTok{(TRUModel) }
 \NormalTok{ep\_U       }\OtherTok{\textless{}{-}}\FunctionTok{endpoints}\NormalTok{(RATE, }\AttributeTok{on =} \StringTok{"quarters"}\NormalTok{)}
 \NormalTok{U          }\OtherTok{\textless{}{-}}\FunctionTok{period.apply}\NormalTok{(RATE, }\AttributeTok{INDEX =}\NormalTok{ ep\_U, }\AttributeTok{FUN =}\NormalTok{ mean)}
-\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{diff}\NormalTok{(}\DecValTok{100}\SpecialCharTok{*}\FunctionTok{log}\NormalTok{(GNP), }\AttributeTok{lag=}\DecValTok{1}\NormalTok{)}
-\NormalTok{Y1         }\OtherTok{\textless{}{-}}\NormalTok{Y[}\StringTok{"1948{-}01{-}01/1973{-}12{-}01"}\NormalTok{]}\SpecialCharTok{{-}}\FunctionTok{mean}\NormalTok{(Y[}\StringTok{"1948{-}01{-}01/1973{-}12{-}01"}\NormalTok{])  }
-\NormalTok{Y2         }\OtherTok{\textless{}{-}}\NormalTok{Y[}\StringTok{"1974{-}01{-}01/1987{-}12{-}01"}\NormalTok{]}\SpecialCharTok{{-}}\FunctionTok{mean}\NormalTok{(Y[}\StringTok{"1974{-}01{-}01/1987{-}12{-}01"}\NormalTok{]) }
-\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{rbind}\NormalTok{(Y1,Y2)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{diff}\NormalTok{(}\DecValTok{100}\SpecialCharTok{*}\FunctionTok{log}\NormalTok{(GDPC1), }\AttributeTok{lag=}\DecValTok{1}\NormalTok{)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\NormalTok{Y[}\StringTok{"1947{-}04{-}01/1987{-}10{-}01"}\NormalTok{]}
+\NormalTok{dates1     }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FunctionTok{as.Date}\NormalTok{(}\StringTok{"1947{-}04{-}01"}\NormalTok{), }\AttributeTok{length=}\DecValTok{107}\NormalTok{,}\AttributeTok{by=}\StringTok{"quarters"}\NormalTok{)}
+\NormalTok{dates2     }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FunctionTok{as.Date}\NormalTok{(}\StringTok{"1974{-}01{-}01"}\NormalTok{), }\AttributeTok{length=}\DecValTok{56}\NormalTok{, }\AttributeTok{by=}\StringTok{"quarters"}\NormalTok{)}
+\NormalTok{Y1         }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{107}\NormalTok{), }\AttributeTok{order.by=}\NormalTok{dates1)}
+\NormalTok{Y2         }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{,  }\DecValTok{56}\NormalTok{), }\AttributeTok{order.by=}\NormalTok{dates2)}
+\NormalTok{D1         }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(Y1,Y2)}
+\NormalTok{Y3         }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{107}\NormalTok{), }\AttributeTok{order.by=}\NormalTok{dates1)}
+\NormalTok{Y4         }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{,  }\DecValTok{56}\NormalTok{), }\AttributeTok{order.by=}\NormalTok{dates2)}
+\NormalTok{D2         }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(Y3,Y4)}
+\NormalTok{YModel     }\OtherTok{\textless{}{-}}\FunctionTok{lm}\NormalTok{(Y }\SpecialCharTok{\textasciitilde{}}\NormalTok{ D1}\SpecialCharTok{+}\NormalTok{D2}\DecValTok{{-}1}\NormalTok{)}
+\NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{resid}\NormalTok{(YModel)}
+\NormalTok{Y\_T        }\OtherTok{\textless{}{-}}\FunctionTok{as.xts}\NormalTok{(}\FunctionTok{fitted}\NormalTok{(YModel))}
 \NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(Y, }\FunctionTok{index}\NormalTok{(U), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
 \NormalTok{Y          }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(Y, }\AttributeTok{fromLast =} \ConstantTok{FALSE}\NormalTok{))}
 \NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(U, Y, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
+\NormalTok{Y\_T        }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(Y\_T, }\FunctionTok{index}\NormalTok{(U), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
+\NormalTok{Y\_T        }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(Y\_T, }\AttributeTok{fromLast =} \ConstantTok{FALSE}\NormalTok{))}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(BASE, Y\_T, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
 \NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{date=}\FunctionTok{index}\NormalTok{(BASE), }\FunctionTok{coredata}\NormalTok{(BASE))}
-\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(BASE, date}\SpecialCharTok{\textgreater{}=}\StringTok{"1950{-}02{-}01"}\NormalTok{)}
-\FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"Y"}\NormalTok{, }\StringTok{"U"}\NormalTok{)}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(BASE, date}\SpecialCharTok{\textgreater{}=}\StringTok{"1950{-}01{-}01"}\NormalTok{)}
+\FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"U"}\NormalTok{, }\StringTok{"Y"}\NormalTok{, }\StringTok{"Y\_T"}\NormalTok{)}
 \NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, Y, U)}
 \FunctionTok{colnames}\NormalTok{(DATA)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{, }\StringTok{"y"}\NormalTok{, }\StringTok{"u"}\NormalTok{)}
 \NormalTok{DATA    }\OtherTok{\textless{}{-}} \FunctionTok{xts}\NormalTok{(DATA[,}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{], }\AttributeTok{order.by=}\FunctionTok{as.Date}\NormalTok{(DATA[,}\DecValTok{1}\NormalTok{], }\StringTok{"\%Y/\%m/\%d"}\NormalTok{))}
@@ -890,11 +902,11 @@ De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shoc
 
 \begin{verbatim}
 ##         y.l1         u.l1         y.l2         u.l2         y.l3         u.l3 
-##  1.481198547 -0.071119734 -0.638411505 -0.038011980  0.119273044  0.009105261 
+##  0.084643928 -0.797700253  0.091996360  1.687229033  0.014958902 -0.821969638 
 ##         y.l4         u.l4         y.l5         u.l5         y.l6         u.l6 
-## -0.090400529  0.046530626  0.190982546  0.068683925 -0.085048685 -0.044135422 
+##  0.118395754  0.878320541  0.031906807 -0.965687332  0.199517955  0.555163427 
 ##         y.l7         u.l7         y.l8         u.l8 
-## -0.014813882  0.019762008 -0.038907057  0.038056651
+## -0.075029618 -0.601355664 -0.002320675  0.281299408
 \end{verbatim}
 
 \begin{Shaded}
@@ -904,12 +916,12 @@ De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shoc
 \end{Shaded}
 
 \begin{verbatim}
-##        y.l1        u.l1        y.l2        u.l2        y.l3        u.l3 
-## -0.63924270  0.19711908  1.37782282  0.16581898 -0.73474450 -0.03226927 
-##        y.l4        u.l4        y.l5        u.l5        y.l6        u.l6 
-##  0.60422078  0.08055120 -0.91221991 -0.07966736  0.52100759  0.12987391 
-##        y.l7        u.l7        y.l8        u.l8 
-## -0.03488430  0.02336134 -0.15989703 -0.01369831
+##         y.l1         u.l1         y.l2         u.l2         y.l3         u.l3 
+## -0.123340332  1.312024159 -0.102844727 -0.609397348 -0.090189350  0.089769287 
+##         y.l4         u.l4         y.l5         u.l5         y.l6         u.l6 
+## -0.037413568 -0.070811294 -0.014735409  0.235075502 -0.106024188 -0.070619219 
+##         y.l7         u.l7         y.l8         u.l8 
+## -0.004578130  0.063548050  0.009414328 -0.008749867
 \end{verbatim}
 
 \begin{Shaded}
@@ -920,9 +932,9 @@ De manera que C(1) permite obtener la respuesta del nivel \(x_{t}\) ante un shoc
 \end{Shaded}
 
 \begin{verbatim}
-##            y          u
-## y  0.0990044 -0.1801656
-## u -0.1801656  1.0078420
+##            y           u
+## y  0.9118184 -0.19343517
+## u -0.1934352  0.09180338
 \end{verbatim}
 
 Habiendo estimado el VAR a continuación encontramos las restricciones de corto y largo plazo:
@@ -944,22 +956,22 @@ Habiendo estimado el VAR a continuación encontramos las restricciones de corto 
 ## 
 ## Type: Blanchard-Quah 
 ## Sample size: 144 
-## Log Likelihood: -214.876 
+## Log Likelihood: -188.052 
 ## 
 ## Estimated contemporaneous impact matrix:
-##         y        u
-## y  0.3112 -0.04944
-## u -0.4339  0.90564
+##       y       u
+## y 0.244 -0.9232
+## u 0.167  0.2537
 ## 
 ## Estimated identified long run impact matrix:
 ##         y     u
-## y  3.8371 0.000
-## u -0.6602 1.712
+## y  0.3794 0.000
+## u -0.1890 4.288
 ## 
 ## Covariance matrix of reduced form residuals (*100):
-##         y      u
-## y   9.927 -17.98
-## u -17.978 100.84
+##        y       u
+## y  91.18 -19.343
+## u -19.34   9.225
 \end{verbatim}
 
 En seguida calculamos la función impulso respuesta para cada variable teniendo en cuenta que la tasa de desempleo no sufre ningún efecto de ambos shocks estructurales de largo plazo.
@@ -1010,7 +1022,7 @@ En seguida calculamos la función impulso respuesta para cada variable teniendo 
              \AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size=}\DecValTok{1}\NormalTok{)}\SpecialCharTok{+}
   \FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size=}\FloatTok{1.5}\NormalTok{)}\SpecialCharTok{+}
   \FunctionTok{scale\_color\_manual}\NormalTok{(}\AttributeTok{values=}\NormalTok{paleta,}
-                     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Producto"}\NormalTok{, }
+                     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"Tasa de crecimiento del producto"}\NormalTok{,}
                                 \StringTok{"Desempleo"}\NormalTok{))}
 \NormalTok{Z}\OtherTok{\textless{}{-}}\NormalTok{Z}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
            \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
@@ -1039,6 +1051,166 @@ En seguida calculamos la función impulso respuesta para cada variable teniendo 
 \includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-7-1.pdf}
 
 El resultado de \citet{BLANCHARD88} implican que los choques de demanda fueron responsables de la gran mayoría de las fluctuaciones en el corto plazo.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{if}\NormalTok{ (BQMODEL}\SpecialCharTok{$}\NormalTok{B[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]}\SpecialCharTok{\textless{}}\DecValTok{0}\NormalTok{)\{}
+\NormalTok{  V}\OtherTok{=}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{)}
+\NormalTok{  bqfactor}\OtherTok{\textless{}{-}}\NormalTok{BQMODEL}\SpecialCharTok{$}\NormalTok{B}\SpecialCharTok{\%*\%}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{diag}\NormalTok{(V))}
+\NormalTok{  \} }
+\NormalTok{adjust}\OtherTok{\textless{}{-}}\NormalTok{(VAR\_2}\SpecialCharTok{$}\NormalTok{obs}\SpecialCharTok{{-}}\NormalTok{((VAR\_2}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{y}\SpecialCharTok{$}\NormalTok{rank}\SpecialCharTok{+}\NormalTok{VAR\_2}\SpecialCharTok{$}\NormalTok{varresult}\SpecialCharTok{$}\NormalTok{u}\SpecialCharTok{$}\NormalTok{rank)}\SpecialCharTok{/}\NormalTok{VAR\_2}\SpecialCharTok{$}\NormalTok{K))}\SpecialCharTok{/}\NormalTok{VAR\_2}\SpecialCharTok{$}\NormalTok{obs}
+
+\NormalTok{bqfactor}\OtherTok{\textless{}{-}}\NormalTok{bqfactor}\SpecialCharTok{*}\FunctionTok{sqrt}\NormalTok{(adjust)}
+\NormalTok{VARhd }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(Estimation)\{}
+ \DocumentationTok{\#\# make X and Y}
+\NormalTok{nlag    }\OtherTok{\textless{}{-}}\NormalTok{ Estimation}\SpecialCharTok{$}\NormalTok{p   }\CommentTok{\# number of lags}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{ Estimation}\SpecialCharTok{$}\NormalTok{y   }\CommentTok{\# data}
+\NormalTok{QQ      }\OtherTok{\textless{}{-}} \FunctionTok{VARmakexy}\NormalTok{(DATA,nlag,}\DecValTok{0}\NormalTok{)}
+\DocumentationTok{\#\# Retrieve and initialize variables }
+\CommentTok{\#invA   \textless{}{-} t(chol(as.matrix(summary(Estimation)$covres)))\# inverse of the A matrix}
+\CommentTok{\#invA    \textless{}{-} BQMODEL$LRIM}
+\NormalTok{invA    }\OtherTok{\textless{}{-}}\NormalTok{ bqfactor}
+\NormalTok{Fcomp   }\OtherTok{\textless{}{-}} \FunctionTok{companionmatrix}\NormalTok{(Estimation)                   }\CommentTok{\# Companion matrix}
+\CommentTok{\#det     \textless{}{-} c\_case                                       \# constant and/or trends}
+\NormalTok{F1      }\OtherTok{\textless{}{-}} \FunctionTok{t}\NormalTok{(QQ}\SpecialCharTok{$}\NormalTok{Ft)                                     }\CommentTok{\# make comparable to notes}
+\NormalTok{eps     }\OtherTok{\textless{}{-}} \FunctionTok{ginv}\NormalTok{(invA) }\SpecialCharTok{\%*\%} \FunctionTok{t}\NormalTok{(}\FunctionTok{residuals}\NormalTok{(Estimation)) }
+\CommentTok{\# structural errors }
+\NormalTok{nvar    }\OtherTok{\textless{}{-}}\NormalTok{ Estimation}\SpecialCharTok{$}\NormalTok{K                                 }\CommentTok{\# number of endogenous variables}
+\NormalTok{nvarXeq }\OtherTok{\textless{}{-}}\NormalTok{ nvar }\SpecialCharTok{*}\NormalTok{ nlag                                  }\CommentTok{\# number of lagged endogenous per equation}
+\NormalTok{nvar\_ex }\OtherTok{\textless{}{-}} \DecValTok{0}                                                \CommentTok{\# number of exogenous (excluding constant and trend)}
+\NormalTok{Y       }\OtherTok{\textless{}{-}}\NormalTok{ QQ}\SpecialCharTok{$}\NormalTok{Y                                             }\CommentTok{\# left{-}hand side}
+\CommentTok{\#X     \textless{}{-} QQ$X[,(1+det):(nvarXeq+det)]                    \# right{-}hand side (no exogenous)}
+\NormalTok{nobs    }\OtherTok{\textless{}{-}} \FunctionTok{nrow}\NormalTok{(Y)                                          }\CommentTok{\# number of observations}
+\DocumentationTok{\#\# Compute historical decompositions}
+\CommentTok{\# Contribution of each shock}
+\NormalTok{invA\_big    }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{,nvarXeq,nvar)}
+\NormalTok{invA\_big[}\DecValTok{1}\SpecialCharTok{:}\NormalTok{nvar,] }\OtherTok{\textless{}{-}}\NormalTok{ invA}
+\NormalTok{Icomp       }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\FunctionTok{diag}\NormalTok{(nvar), }\FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{,nvar,(nlag}\DecValTok{{-}1}\NormalTok{)}\SpecialCharTok{*}\NormalTok{nvar))}
+\NormalTok{HDshock\_big }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{dim=}\FunctionTok{c}\NormalTok{(nlag}\SpecialCharTok{*}\NormalTok{nvar,nobs}\SpecialCharTok{+}\DecValTok{1}\NormalTok{,nvar))}
+\NormalTok{HDshock     }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{dim=}\FunctionTok{c}\NormalTok{(nvar,(nobs}\SpecialCharTok{+}\DecValTok{1}\NormalTok{),nvar))}
+
+\ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{nvar)\{  }\CommentTok{\# for each variable}
+\NormalTok{  eps\_big }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{,nvar,(nobs}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)) }\CommentTok{\# matrix of shocks conformable with companion}
+\NormalTok{  eps\_big[j,}\DecValTok{2}\SpecialCharTok{:}\FunctionTok{ncol}\NormalTok{(eps\_big)] }\OtherTok{\textless{}{-}}\NormalTok{ eps[j,]}
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{2}\SpecialCharTok{:}\NormalTok{(nobs}\SpecialCharTok{+}\DecValTok{1}\NormalTok{))\{}
+\NormalTok{    HDshock\_big[,i,j] }\OtherTok{\textless{}{-}}\NormalTok{ invA\_big }\SpecialCharTok{\%*\%}\NormalTok{ eps\_big[,i] }\SpecialCharTok{+}\NormalTok{ Fcomp }\SpecialCharTok{\%*\%}\NormalTok{ HDshock\_big[,(i}\DecValTok{{-}1}\NormalTok{),j]}
+\NormalTok{    HDshock[,i,j] }\OtherTok{\textless{}{-}}\NormalTok{  Icomp }\SpecialCharTok{\%*\%}\NormalTok{ HDshock\_big[,i,j]}
+\NormalTok{  \} }
+\NormalTok{\} }
+
+\NormalTok{HD.shock }\OtherTok{\textless{}{-}} \FunctionTok{array}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{dim=}\FunctionTok{c}\NormalTok{((nobs}\SpecialCharTok{+}\NormalTok{nlag),nvar,nvar))   }\CommentTok{\# [nobs x shock x var]}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{nvar)\{}
+    \ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{nvar)\{}
+\NormalTok{      HD.shock[,j,i] }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{rep}\NormalTok{(}\ConstantTok{NA}\NormalTok{,nlag), HDshock[i,(}\DecValTok{2}\SpecialCharTok{:}\FunctionTok{dim}\NormalTok{(HDshock)[}\DecValTok{2}\NormalTok{]),j])}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\FunctionTok{return}\NormalTok{(HD.shock)}
+
+\NormalTok{\}}
+
+\NormalTok{VARmakexy }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(DATA,lags,c\_case)\{}
+\NormalTok{nobs }\OtherTok{\textless{}{-}} \FunctionTok{nrow}\NormalTok{(DATA)}
+\CommentTok{\#Y matrix }
+\NormalTok{Y }\OtherTok{\textless{}{-}}\NormalTok{ DATA[(lags}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(DATA),]}
+\NormalTok{Y }\OtherTok{\textless{}{-}}\NormalTok{ DATA[}\SpecialCharTok{{-}}\FunctionTok{c}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\NormalTok{lags),]}
+\CommentTok{\#X{-}matrix }
+\ControlFlowTok{if}\NormalTok{ (c\_case}\SpecialCharTok{==}\DecValTok{0}\NormalTok{)\{}
+\NormalTok{  X }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+  \ControlFlowTok{for}\NormalTok{ (jj }\ControlFlowTok{in} \DecValTok{0}\SpecialCharTok{:}\NormalTok{(lags}\DecValTok{{-}1}\NormalTok{))\{}
+\NormalTok{        X }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(DATA[(jj}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{(nobs}\SpecialCharTok{{-}}\NormalTok{lags}\SpecialCharTok{+}\NormalTok{jj),])}
+\NormalTok{      \} }
+\NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{(c\_case}\SpecialCharTok{==}\DecValTok{1}\NormalTok{)\{ }\CommentTok{\#constant}
+\NormalTok{      X }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+      \ControlFlowTok{for}\NormalTok{ (jj }\ControlFlowTok{in} \DecValTok{0}\SpecialCharTok{:}\NormalTok{(lags}\DecValTok{{-}1}\NormalTok{))\{}
+\NormalTok{        X }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(DATA[(jj}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{(nobs}\SpecialCharTok{{-}}\NormalTok{lags}\SpecialCharTok{+}\NormalTok{jj),])}
+\NormalTok{      \}}
+\NormalTok{      X }\OtherTok{\textless{}{-}} \FunctionTok{cbind}\NormalTok{(}\FunctionTok{matrix}\NormalTok{(}\DecValTok{1}\NormalTok{,(nobs}\SpecialCharTok{{-}}\NormalTok{lags),}\DecValTok{1}\NormalTok{), X) }
+\NormalTok{    \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{(c\_case}\SpecialCharTok{==}\DecValTok{2}\NormalTok{)\{ }\CommentTok{\# time trend and constant}
+\NormalTok{      X }\OtherTok{\textless{}{-}} \ConstantTok{NA}
+      \ControlFlowTok{for}\NormalTok{ (jj }\ControlFlowTok{in} \DecValTok{0}\SpecialCharTok{:}\NormalTok{(lags}\DecValTok{{-}1}\NormalTok{))\{}
+\NormalTok{        X }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(DATA[(jj}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{(nobs}\SpecialCharTok{{-}}\NormalTok{lags}\SpecialCharTok{+}\NormalTok{jj),])}
+\NormalTok{      \}}
+\NormalTok{      trend }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\FunctionTok{nrow}\NormalTok{(X))}
+\NormalTok{      X }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{matrix}\NormalTok{(}\DecValTok{1}\NormalTok{,(nobs}\SpecialCharTok{{-}}\NormalTok{lags),}\DecValTok{1}\NormalTok{), }\FunctionTok{t}\NormalTok{(trend))}
+\NormalTok{    \}}
+\NormalTok{A }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{t}\NormalTok{(X) }\SpecialCharTok{\%*\%} \FunctionTok{as.matrix}\NormalTok{(X)) }
+\NormalTok{B }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{t}\NormalTok{(X)) }\SpecialCharTok{\%*\%} \FunctionTok{as.matrix}\NormalTok{(Y))}
+
+\NormalTok{Ft }\OtherTok{\textless{}{-}} \FunctionTok{ginv}\NormalTok{(A) }\SpecialCharTok{\%*\%}\NormalTok{ B}
+\NormalTok{retu }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}\AttributeTok{X=}\NormalTok{X,}\AttributeTok{Y=}\NormalTok{Y, }\AttributeTok{Ft=}\NormalTok{Ft)}
+\FunctionTok{return}\NormalTok{(retu)}
+\NormalTok{\}}
+
+\NormalTok{companionmatrix }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (x) }
+\NormalTok{\{}
+  \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\NormalTok{(}\FunctionTok{class}\NormalTok{(x) }\SpecialCharTok{==} \StringTok{"varest"}\NormalTok{)) \{}
+    \FunctionTok{stop}\NormalTok{(}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{Please provide an object of class \textquotesingle{}varest\textquotesingle{}, generated by \textquotesingle{}VAR()\textquotesingle{}.}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{  \}}
+\NormalTok{  K }\OtherTok{\textless{}{-}}\NormalTok{ x}\SpecialCharTok{$}\NormalTok{K}
+\NormalTok{  p }\OtherTok{\textless{}{-}}\NormalTok{ x}\SpecialCharTok{$}\NormalTok{p}
+\NormalTok{  A }\OtherTok{\textless{}{-}} \FunctionTok{unlist}\NormalTok{(}\FunctionTok{Acoef}\NormalTok{(x))}
+\NormalTok{  companion }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\AttributeTok{nrow =}\NormalTok{ K }\SpecialCharTok{*}\NormalTok{ p, }\AttributeTok{ncol =}\NormalTok{ K }\SpecialCharTok{*}\NormalTok{ p)}
+\NormalTok{  companion[}\DecValTok{1}\SpecialCharTok{:}\NormalTok{K, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{(K }\SpecialCharTok{*}\NormalTok{ p)] }\OtherTok{\textless{}{-}}\NormalTok{ A}
+  \ControlFlowTok{if}\NormalTok{ (p }\SpecialCharTok{\textgreater{}} \DecValTok{1}\NormalTok{) \{}
+\NormalTok{    j }\OtherTok{\textless{}{-}} \DecValTok{0}
+    \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in}\NormalTok{ (K }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{(K }\SpecialCharTok{*}\NormalTok{ p)) \{}
+\NormalTok{      j }\OtherTok{\textless{}{-}}\NormalTok{ j }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{      companion[i, j] }\OtherTok{\textless{}{-}} \DecValTok{1}
+\NormalTok{    \}}
+\NormalTok{  \}}
+  \FunctionTok{return}\NormalTok{(companion)}
+\NormalTok{\}}
+
+\NormalTok{BQh}\OtherTok{\textless{}{-}}\FunctionTok{VARhd}\NormalTok{(VAR\_2)}
+\NormalTok{BQD}\OtherTok{\textless{}{-}}\NormalTok{BQh[,}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]}
+\NormalTok{dates1     }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\FunctionTok{as.Date}\NormalTok{(}\StringTok{"1950{-}01{-}01"}\NormalTok{), }\AttributeTok{length=}\DecValTok{152}\NormalTok{,}\AttributeTok{by=}\StringTok{"quarters"}\NormalTok{)}
+\NormalTok{BQD}\OtherTok{\textless{}{-}}\FunctionTok{xts}\NormalTok{(BQD, }\AttributeTok{order.by=}\NormalTok{dates1)}
+\FunctionTok{getSymbols}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"USRECD"}\NormalTok{),}
+           \AttributeTok{src =} \StringTok{"FRED"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "USRECD"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ep\_USRECD  }\OtherTok{\textless{}{-}}\FunctionTok{endpoints}\NormalTok{(USRECD, }\AttributeTok{on =} \StringTok{"quarters"}\NormalTok{)}
+\NormalTok{USRECD     }\OtherTok{\textless{}{-}}\FunctionTok{period.apply}\NormalTok{(USRECD , }\AttributeTok{INDEX =}\NormalTok{ ep\_USRECD, }\AttributeTok{FUN =}\NormalTok{ max)}
+\NormalTok{YY         }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(USRECD, }\FunctionTok{index}\NormalTok{(BQD), }\AttributeTok{join=}\StringTok{"outer"}\NormalTok{)}
+\NormalTok{YY         }\OtherTok{\textless{}{-}}\FunctionTok{cbind}\NormalTok{(}\FunctionTok{na.locf}\NormalTok{(YY, }\AttributeTok{fromLast =} \ConstantTok{TRUE}\NormalTok{))}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{merge}\NormalTok{(BQD, YY, }\AttributeTok{join=}\StringTok{"left"}\NormalTok{)}
+\NormalTok{BASE       }\OtherTok{\textless{}{-}}\FunctionTok{data.frame}\NormalTok{(}\AttributeTok{date=}\FunctionTok{index}\NormalTok{(BASE), }\FunctionTok{coredata}\NormalTok{(BASE))}
+\FunctionTok{colnames}\NormalTok{(BASE)}\OtherTok{\textless{}{-}}\FunctionTok{c}\NormalTok{(}\StringTok{"date"}\NormalTok{,}\StringTok{"Y"}\NormalTok{, }\StringTok{"R"}\NormalTok{)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\NormalTok{dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(BASE, date, Y, R)}
+\NormalTok{DATA    }\OtherTok{\textless{}{-}}\FunctionTok{filter}\NormalTok{(DATA, date }\SpecialCharTok{\textgreater{}=} \StringTok{"1952{-}01{-}01"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(scales)}
+\NormalTok{P }\OtherTok{\textless{}{-}}\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data =}\NormalTok{ DATA, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ date, }\AttributeTok{y =}\NormalTok{Y}\SpecialCharTok{*}\DecValTok{1}\NormalTok{))}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\StringTok{"Tasa de variación (\%)"}\NormalTok{,}
+          \AttributeTok{x=}\StringTok{"Período"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Fluctuaciones del producto dado shock en demanda"}\NormalTok{)}\SpecialCharTok{+}\FunctionTok{geom\_line}\NormalTok{(}\AttributeTok{size=}\FloatTok{1.5}\NormalTok{, }\AttributeTok{color=}\StringTok{"blue"}\NormalTok{)}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{geom\_vline}\NormalTok{(}\AttributeTok{xintercept=}\FunctionTok{as.Date}\NormalTok{(}\FunctionTok{ifelse}\NormalTok{(DATA}\SpecialCharTok{$}\NormalTok{R}\SpecialCharTok{==}\DecValTok{1}\NormalTok{, DATA}\SpecialCharTok{$}\NormalTok{date, }\ConstantTok{NA}\NormalTok{)), }\AttributeTok{linetype=}\StringTok{\textquotesingle{}dashed\textquotesingle{}}\NormalTok{, }\AttributeTok{color=}\FunctionTok{rep}\NormalTok{(}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{, }\FunctionTok{length}\NormalTok{(DATA}\SpecialCharTok{$}\NormalTok{R)))}\SpecialCharTok{+}
+\FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept=}\DecValTok{0}\NormalTok{, }\AttributeTok{linetype=}\StringTok{"dashed"}\NormalTok{,}
+             \AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size=}\DecValTok{1}\NormalTok{)}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{theme}\NormalTok{(}\AttributeTok{axis.line.x =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{plot.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size=}\DecValTok{14}\NormalTok{, }\AttributeTok{hjust =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.left  =} \FunctionTok{element\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \FloatTok{0.5}\NormalTok{),}
+           \AttributeTok{axis.line.y.right =} \FunctionTok{element\_blank}\NormalTok{(),}
+           \AttributeTok{axis.text.x =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{14}\NormalTok{),}
+           \AttributeTok{axis.text.y =} \FunctionTok{element\_text}\NormalTok{( }\AttributeTok{color =} \StringTok{"black"}\NormalTok{, }\AttributeTok{size =} \DecValTok{12}\NormalTok{))}
+\NormalTok{P}\OtherTok{\textless{}{-}}\NormalTok{P}\SpecialCharTok{+}\FunctionTok{scale\_x\_date}\NormalTok{(}\AttributeTok{breaks =} \StringTok{"4 years"}\NormalTok{, }\AttributeTok{labels=}\FunctionTok{date\_format}\NormalTok{(}\StringTok{"\%Y"}\NormalTok{))}
+\NormalTok{P}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-9-1.pdf}
 
 \hypertarget{aplicaciuxf3n-gali99}{%
 \section{\texorpdfstring{Aplicación \citet{GALI99}}{Aplicación @GALI99}}\label{aplicaciuxf3n-gali99}}
@@ -1146,7 +1318,7 @@ Los supuestos sobre la matriz diagonal inferior que expresan las restricciones d
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-9-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-11-1.pdf}
 
 Como puede apreciarse en la figura anterior, los shocks no tecnológicos causan \emph{en el corto plazo} efectos tanto en el producto como en la productividad; se evidencia que los movimientos ciclicos en el corto plazo de la productividad no son únicamente impulsados por los shocks tecnológicos.
 
@@ -1293,7 +1465,7 @@ Y representamos la función impulso respuesta ante un shock en \(\pi\).
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-14-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-16-1.pdf}
 
 Finalmente, podemos observar la descomposición de la varianza de la variable \(\pi\):
 
@@ -1339,7 +1511,7 @@ Finalmente, podemos observar la descomposición de la varianza de la variable \(
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-15-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-17-1.pdf}
 
 A continuación se replicará los resultados obtenidos por \citet{Herwartz2016}, específicamente se estimaran los shocks estructurales a través de la metodología de cambios en volatilidades. Ello se logra a través de la función \emph{id.cv()} dentro del cual hay que indicarle la fecha a partir de la cual se dio ese cambio estructural.
 
@@ -1354,7 +1526,7 @@ Un primer paso es visualizar cada una de las series.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-16-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-18-1.pdf}
 
 Con base en el objeto VAR podemos estimar su forma estructural con la función \emph{id.cv()} la cual introduce el \emph{cambio en la varianza} que se observa en las series, sin embargo la aplicación de esta función requiere específicar el argumento \emph{SB} en formato \emph{ts}:
 
@@ -1618,7 +1790,7 @@ Enseguida, graficamos para cada variable y shocks su IFR.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-24-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-26-1.pdf}
 
 El resumen el resultado revela que solo el 12.7\% de todas las estimaciones hechas a través de bootstrap están en línea con lo que la teoría económica nos sugeriría que debería corresponder con los patrones de los signos motivados en forma conjunta.
 
@@ -1641,7 +1813,7 @@ crea un objeto para la inspección visual de la descomposición de la varianza d
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-25-1.pdf}
+\includegraphics{01-conceptos_files/figure-latex/unnamed-chunk-27-1.pdf}
 
 De acuerdo a la anterior figura es evidente que el shock de política monetaria explica más del 50\% del error cuadrático medio de predicción de la brecha del producto, mientras que el choque de demanda representa constantemente solo alrededor del 5\% de la media de predicción
 error al cuadrado.
