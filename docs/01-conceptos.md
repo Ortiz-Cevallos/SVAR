@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-04-27"
+date: "2022-05-10"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -443,7 +443,7 @@ VAR_1$varresult$y$coefficients
 
 ```
 ##         c.l1         y.l1        const 
-##  1.031021984 -0.139087357  0.004025386
+##  0.979653978 -0.115925081  0.004246962
 ```
 
 ```r
@@ -451,8 +451,8 @@ VAR_1$varresult$c$coefficients
 ```
 
 ```
-##         c.l1         y.l1        const 
-##  0.846092193 -0.115153170  0.005142927
+##       c.l1       y.l1      const 
+##  0.8585014 -0.1207486  0.0050894
 ```
 
 ```r
@@ -462,8 +462,8 @@ SIGMA$covres
 
 ```
 ##              c            y
-## c 0.0002165772 0.0001608193
-## y 0.0001608193 0.0002722802
+## c 0.0002142579 0.0001642482
+## y 0.0001642482 0.0002836331
 ```
 
 De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente $\epsilon_{1,t}$  y del ingreso transitorio $\epsilon_{2,t}$. La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que $B_{1,2}=0$.
@@ -479,8 +479,8 @@ SVAR_1$B
 
 ```
 ##            c          y
-## c 0.01471658 0.00000000
-## y 0.01092775 0.01236545
+## c 0.01463931 0.00000000
+## y 0.01122159 0.01255814
 ```
 
 Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
@@ -745,6 +745,7 @@ getSymbols(c("GDPC1", "UNRATE"),
 ```r
 TRUModel   <- lm(UNRATE["1948-01-01/1987-12-01"] ~ c(1:length(UNRATE["1948-01-01/1987-12-01"])))
 RATE       <-resid(TRUModel) 
+U_T        <-as.xts(fitted(TRUModel))
 ep_U       <-endpoints(RATE, on = "quarters")
 U          <-period.apply(RATE, INDEX = ep_U, FUN = mean)
 Y          <-diff(100*log(GDPC1), lag=1)
@@ -1035,11 +1036,15 @@ companionmatrix <- function (x)
   }
   return(companion)
 }
-
-BQh<-VARhd(VAR_2)
-BQD<-BQh[,2,1]
 dates1     <- seq(as.Date("1950-01-01"), length=152,by="quarters")
-BQD<-xts(BQD, order.by=dates1)
+BQH<-VARhd(VAR_2)
+BQY_D<-BQH[,2,1]
+BQY_D<-xts(BQY_D, order.by=dates1)
+BQY_S1<-BQH[,1,1]
+BQY_S1<-xts(BQY_S1, order.by=dates1)
+BQY_S<-BQY_S1+BASE$Y_T
+BQY_S<-cumsum(na.omit(BQY_S*0.01))
+BQY_S<-BQY_S+as.numeric(coredata(log(GDPC1["1952-01-01"])))
 getSymbols(c("USRECD"),
            src = "FRED")
 ```
@@ -1051,22 +1056,39 @@ getSymbols(c("USRECD"),
 ```r
 ep_USRECD  <-endpoints(USRECD, on = "quarters")
 USRECD     <-period.apply(USRECD , INDEX = ep_USRECD, FUN = max)
-YY         <-merge(USRECD, index(BQD), join="outer")
+YY         <-merge(USRECD, index(BQY_D), join="outer")
 YY         <-cbind(na.locf(YY, fromLast = TRUE))
-BASE       <-merge(BQD, YY, join="left")
-BASE       <-data.frame(date=index(BASE), coredata(BASE))
-colnames(BASE)<-c("date","Y", "R")
-DATA    <-dplyr::select(BASE, date, Y, R)
+BASE2       <-merge(BQY_D, YY, join="left")
+BASE2       <-merge(BASE2, BQY_S1, join="left")
+BASE2       <-data.frame(date=index(BASE2), coredata(BASE2))
+colnames(BASE2)<-c("date","Y_D", "R", "Y_S")
+DATA    <-dplyr::select(BASE2, date, Y_D, R, Y_S)
 DATA    <-filter(DATA, date >= "1952-01-01")
+BQY_S   <-merge(BQY_S, log(GDPC1), join="left")
+BQY_S   <-data.frame(date=index(BQY_S), coredata(BQY_S))
+colnames(BQY_S)<-c("date","BQY_S", "GNP")
+BASE_LONG <- gather(BQY_S, key="measure", value="value",c("BQY_S", "GNP"))
+Z<-ggplot(BASE_LONG, aes(x=date, y=value, group = measure,
+                         colour=measure))
+Z<-Z+labs(y="Logaritmo",
+          x="Fecha")+
+  geom_line(size=1.5)
+Z
 ```
+
+![](01-conceptos_files/figure-epub3/unnamed-chunk-8-1.png)<!-- -->
 
 
 ```r
 library(scales)
-P <-ggplot(data = DATA, aes(x = date, y =Y*1))
+paleta<-c("#E41A1C", "#377EB8")
+BASE_LONG <- gather(DATA, key="measure", value="value",c("Y_D", "Y_S"))
+P <-ggplot(data = BASE_LONG, aes(x = date, y =value,fill= measure))
 P<-P+labs(y="Tasa de variación (%)",
-          x="Período", title = "Fluctuaciones del producto dado shock en demanda")+geom_line(size=1.5, color="blue")
-P<-P+geom_vline(xintercept=as.Date(ifelse(DATA$R==1, DATA$date, NA)), linetype='dashed', color=rep('red', length(DATA$R)))+
+          x="Período", title = "Fluctuaciones del producto dado shock en demanda")+geom_bar(stat = "identity") +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  scale_fill_manual(values = paleta)
+P<-P+geom_vline(xintercept=as.Date(ifelse(BASE_LONG$R==1, BASE_LONG$date, NA)), linetype='dashed', color=rep('red', length(BASE_LONG$R)))+
 geom_hline(yintercept=0, linetype="dashed",
              color = "black", size=1)
 P<-P+theme(axis.line.x = element_line(colour = "black", size = 0.5),
