@@ -16,6 +16,7 @@ link-citations: yes
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(reticulate)
 ```
 
 # INTRODUCCIÓN
@@ -692,7 +693,7 @@ De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock.
 @BLANCHARD88 argumentan que los shocks de demanda no tienen efectos en el largo plazo sobre el producto nominal. Para ello se requiere que C(1) sea una matriz triangular inferior en un VAR donde el producto nominal sea la variable exógena. 
 
 ```{r message=FALSE, warning=FALSE}
-getSymbols(c("GDPC1", "UNRATE"),
+getSymbols(c("GDPC1", "UNRATE", "USRECD"),
            src = "FRED")
 TRUModel   <- lm(UNRATE["1948-01-01/1987-12-01"] ~ c(1:length(UNRATE["1948-01-01/1987-12-01"])))
 RATE       <-resid(TRUModel) 
@@ -933,17 +934,15 @@ BQY_S1<-xts(BQY_S1, order.by=dates1)
 BQY_S<-BQY_S1+BASE$Y_T
 BQY_S<-cumsum(na.omit(BQY_S*0.01))
 BQY_S<-BQY_S+as.numeric(coredata(log(GDPC1["1952-01-01"])))
-getSymbols(c("USRECD"),
-           src = "FRED")
 ep_USRECD  <-endpoints(USRECD, on = "quarters")
 USRECD     <-period.apply(USRECD , INDEX = ep_USRECD, FUN = max)
 YY         <-merge(USRECD, index(BQY_D), join="outer")
-YY         <-cbind(na.locf(YY, fromLast = TRUE))
+YY          <-cbind(na.locf(YY, fromLast = TRUE))
 BASE2       <-merge(BQY_D, YY, join="left")
 BASE2       <-merge(BASE2, BQY_S1, join="left")
 BASE2       <-data.frame(date=index(BASE2), coredata(BASE2))
-colnames(BASE2)<-c("date","Y_D", "R", "Y_S")
-DATA    <-dplyr::select(BASE2, date, Y_D, R, Y_S)
+colnames(BASE2)<-c("date","Y_D", "Y_S")#"R", "Y_S")
+DATA    <-dplyr::select(BASE2, date, Y_D, Y_S)#R, Y_S)
 DATA    <-filter(DATA, date >= "1952-01-01")
 BQY_S   <-merge(BQY_S, log(GDPC1), join="left")
 BQY_S   <-data.frame(date=index(BQY_S), coredata(BQY_S))
@@ -1286,7 +1285,7 @@ Notar que el horizonte de tiempo para el IFR tiene que ser determinado de antema
 ```{r message=FALSE, warning=FALSE}
 cores <- parallel::detectCores() - 1
 set.seed(231)
-usa.cv.boot <- wild.boot(usa.cv, design = "fixed",distr = "rademacher", nboot = 1000, n.ahead = 15,nc = cores, signrest = signrest)
+usa.cv.boot <- wild.boot(usa.cv, design = "fixed",distr = "rademacher", nboot = 100, n.ahead = 15,nc = cores, signrest = signrest)
 summary(usa.cv.boot)
 ```
 
@@ -1348,5 +1347,9 @@ L\\
 e\end{bmatrix}
 \end{eqnarray}
 
+
+```{python}
+import pandas as pd
+```
 
 

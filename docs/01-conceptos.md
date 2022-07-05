@@ -1,7 +1,7 @@
 ---
 title: "VECTORES AUTOREGRESIVOS (VAR)"
 author: "[Luis Ortiz-Cevallos](https://ortiz-cevallos.github.io/MYSELF/)"
-date: "2022-05-10"
+date: "2022-07-05"
 site: bookdown::bookdown_site
 output: bookdown::gitbook
 code_download: true
@@ -443,7 +443,7 @@ VAR_1$varresult$y$coefficients
 
 ```
 ##         c.l1         y.l1        const 
-##  0.979653978 -0.115925081  0.004246962
+##  0.977213975 -0.115000492  0.004246045
 ```
 
 ```r
@@ -451,8 +451,8 @@ VAR_1$varresult$c$coefficients
 ```
 
 ```
-##       c.l1       y.l1      const 
-##  0.8585014 -0.1207486  0.0050894
+##         c.l1         y.l1        const 
+##  0.837655010 -0.112571185  0.005099686
 ```
 
 ```r
@@ -462,8 +462,8 @@ SIGMA$covres
 
 ```
 ##              c            y
-## c 0.0002142579 0.0001642482
-## y 0.0001642482 0.0002836331
+## c 0.0002152250 0.0001641284
+## y 0.0001641284 0.0002801706
 ```
 
 De acuerdo con la hipótesis del ingreso permanente, el consumo debe ser igual al ingreso permanente, en tanto el ingreso transitorio igual a la diferencia entre el ingreso actual y el permanente. Cochcrane desea identificar los shocks del ingreso permanente $\epsilon_{1,t}$  y del ingreso transitorio $\epsilon_{2,t}$. La intuición nos dice que el consumo no debería de responder a los shocks de ingresos transitorios. Lo anterior implica que $B_{1,2}=0$.
@@ -479,8 +479,8 @@ SVAR_1$B
 
 ```
 ##            c          y
-## c 0.01463931 0.00000000
-## y 0.01122159 0.01255814
+## c 0.01466988 0.00000000
+## y 0.01118766 0.01245008
 ```
 
 Dado la estimación de la matriz B, es posible calcular la matriz C(L) y computar la función impulso respuesta de cada shock.
@@ -734,12 +734,12 @@ De manera que C(1) permite obtener la respuesta del nivel $x_{t}$ ante un shock.
 
 
 ```r
-getSymbols(c("GDPC1", "UNRATE"),
+getSymbols(c("GDPC1", "UNRATE", "USRECD"),
            src = "FRED")
 ```
 
 ```
-## [1] "GDPC1"  "UNRATE"
+## [1] "GDPC1"  "UNRATE" "USRECD"
 ```
 
 ```r
@@ -1045,24 +1045,15 @@ BQY_S1<-xts(BQY_S1, order.by=dates1)
 BQY_S<-BQY_S1+BASE$Y_T
 BQY_S<-cumsum(na.omit(BQY_S*0.01))
 BQY_S<-BQY_S+as.numeric(coredata(log(GDPC1["1952-01-01"])))
-getSymbols(c("USRECD"),
-           src = "FRED")
-```
-
-```
-## [1] "USRECD"
-```
-
-```r
 ep_USRECD  <-endpoints(USRECD, on = "quarters")
 USRECD     <-period.apply(USRECD , INDEX = ep_USRECD, FUN = max)
 YY         <-merge(USRECD, index(BQY_D), join="outer")
-YY         <-cbind(na.locf(YY, fromLast = TRUE))
+YY          <-cbind(na.locf(YY, fromLast = TRUE))
 BASE2       <-merge(BQY_D, YY, join="left")
 BASE2       <-merge(BASE2, BQY_S1, join="left")
 BASE2       <-data.frame(date=index(BASE2), coredata(BASE2))
-colnames(BASE2)<-c("date","Y_D", "R", "Y_S")
-DATA    <-dplyr::select(BASE2, date, Y_D, R, Y_S)
+colnames(BASE2)<-c("date","Y_D", "Y_S")#"R", "Y_S")
+DATA    <-dplyr::select(BASE2, date, Y_D, Y_S)#R, Y_S)
 DATA    <-filter(DATA, date >= "1952-01-01")
 BQY_S   <-merge(BQY_S, log(GDPC1), join="left")
 BQY_S   <-data.frame(date=index(BQY_S), coredata(BQY_S))
@@ -1426,7 +1417,7 @@ summary(usa.cv)
 ## Log-Likelihood: -564.2994
 ## AIC: 1268.599
 ## Structural Break: At Observation Number 59 during 1979 Q3
-## Number of GLS estimations: 22
+## Number of GLS estimations: 21
 ## Number of Restrictions: 0
 ## 
 ## Estimated unconditional Heteroscedasticity Matrix (Lambda):
@@ -1537,7 +1528,7 @@ summary(restricted.model)
 ## Log-Likelihood: -568.6664
 ## AIC: 1277.333
 ## Structural Break: At Observation Number 59 during 1979 Q3
-## Number of GLS estimations: 23
+## Number of GLS estimations: 24
 ## Number of Restrictions: 3
 ## 
 ## Estimated unconditional Heteroscedasticity Matrix (Lambda):
@@ -1561,8 +1552,8 @@ summary(restricted.model)
 ## Standard Errors of B:
 ##          [,1]       [,2]       [,3]
 ## x  0.08638851 0.00000000 0.00000000
-## pi 0.10334026 0.15169565 0.00000000
-## i  0.08527441 0.08620187 0.07354585
+## pi 0.10334026 0.15169564 0.00000000
+## i  0.08527441 0.08620187 0.07354584
 ## 
 ## Identification Wald Test of equal Eigenvalues:
 ## [1] 0.9420116 0.3501948 0.2346854
@@ -1601,7 +1592,7 @@ Notar que el horizonte de tiempo para el IFR tiene que ser determinado de antema
 ```r
 cores <- parallel::detectCores() - 1
 set.seed(231)
-usa.cv.boot <- wild.boot(usa.cv, design = "fixed",distr = "rademacher", nboot = 1000, n.ahead = 15,nc = cores, signrest = signrest)
+usa.cv.boot <- wild.boot(usa.cv, design = "fixed",distr = "rademacher", nboot = 100, n.ahead = 15,nc = cores, signrest = signrest)
 summary(usa.cv.boot)
 ```
 
@@ -1611,7 +1602,7 @@ summary(usa.cv.boot)
 ## ----------------- 
 ## 
 ## Method: Wild bootstrap
-## Bootstrap iterations: 1000
+## Bootstrap iterations: 100
 ## Distribution used: rademacher
 ## Design: fixed
 ## 
@@ -1622,16 +1613,16 @@ summary(usa.cv.boot)
 ## i  0.7084709  0.1572953  0.02899916
 ## 
 ## Bootstrap means: 
-##          [,1]       [,2]       [,3]
-## x  0.09580740 -0.5030485 -0.6303868
-## pi 0.09639712  1.1310905 -0.7720157
-## i  0.70100321  0.0364798 -0.1675659
+##         [,1]        [,2]       [,3]
+## x  0.1045518 -0.48657641 -0.6423641
+## pi 0.1109406  1.17572720 -0.7148899
+## i  0.7117266  0.04557165 -0.1359824
 ## 
 ## Bootstrap standard errors: 
 ##          [,1]      [,2]      [,3]
-## x  0.14143383 0.3077349 0.2494872
-## pi 0.17500155 0.4556690 0.5925734
-## i  0.07511879 0.2273595 0.2178134
+## x  0.14559365 0.3064924 0.2414462
+## pi 0.17784258 0.4316365 0.5771564
+## i  0.07573841 0.2279646 0.2282243
 ## 
 ## Identified sign patterns: 
 ## =========================
@@ -1643,11 +1634,11 @@ summary(usa.cv.boot)
 ## i       1      1               1
 ## 
 ## Unique occurrence of single shocks according to sign pattern: 
-## demand : 65.5 % 
-## supply : 66 % 
-## monetary_policy : 28.4 % 
+## demand : 76 % 
+## supply : 60 % 
+## monetary_policy : 37 % 
 ## 
-## Joint occurrence of specified shocks: 12.7 %
+## Joint occurrence of specified shocks: 18 %
 ```
 
 Enseguida, graficamos para cada variable y shocks su IFR.
@@ -1714,5 +1705,10 @@ L\\
 e\end{bmatrix}
 \end{eqnarray}
 
+
+
+```python
+import pandas as pd
+```
 
 
